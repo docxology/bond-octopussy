@@ -1,90 +1,58 @@
-# Architecture: The Thin Orchestrator Flow
+# Architecture — Octopussy: FABERGÉ
 
-The `octopussy` exemplar is designed around a strict separation of concerns across three operational layers. Understanding this architecture before modifying any file prevents the most common errors: math appearing in scripts, reusable project logic remaining trapped in CLI files, and mocks appearing in tests.
+The package is a thin protocol adapter over three pure domain modules.
 
-## Layer Reference
-
-| Layer | Primary Files | Public API | Invariants | Testability |
-|---|---|---|---|---|
-| **`src/` — Project Logic** | `src/optimizer.py`, `src/invariants.py`, `src/experiment_config.py`, `src/analysis/`, `src/figures/`, `src/dashboard.py`, `src/manuscript_variables.py` | Optimizer primitives plus importable analysis/figure/dashboard builders | Math primitives stay pure; `experiment_config.py` is the single loader for `manuscript/config.yaml` → `experiment:` | Direct unit tests for pure logic; integration tests for generated artifacts |
-| **`scripts/` — Orchestrators** | `scripts/optimization_analysis.py`, `scripts/build_dashboard.py`, `scripts/z_generate_manuscript_variables.py`, `scripts/generate_api_docs.py`, `scripts/00_preflight.py` | CLI compatibility wrappers and script entry points | No experiment, plotting, dashboard, or manuscript-variable logic lives only in scripts; `00_preflight` and `generate_api_docs` are AESTHETIC | Subprocess/integration tests exercise real commands |
-| **`infrastructure/` — Cross-Cutting** | `infrastructure/scientific/`, `infrastructure/reporting/`, `infrastructure/rendering/`, `infrastructure/core/`, `infrastructure/validation/` | Stability checks, benchmarking, PDF rendering, structured logging, progress bars | Generic reusable behavior only; no project-specific assumptions | Covered by separate `tests/infra_tests/` suite |
-
-## Strict Dependency Direction
+## Layers
 
 ```
-scripts/ ──→ src/            (imports and calls project behavior)
-src/optimizer.py ──→ [stdlib + numpy only]
-src/analysis/ ──→ infrastructure/ (project-specific generation via reusable services)
-src/benchmark_support.py ──→ infrastructure.benchmark (declared adapter)
-tests/   ──→ src/            (direct testing of importable project behavior)
-tests/   ──→ scripts/        (CLI compatibility smoke tests)
+ scripts/  (thin CLIs, one per mission phase)
+    |
+    v
+ src/octopussy/mission.py          MissionProvider + GadgetRegistry (imports bond_api)
+    |          |
+    |          +--> manuscript_variables.py ---> manuscript/config.yaml + live run
+    v
+ src/octopussy/forgery_detection.py   (pure; numpy only)
+ src/octopussy/cover_logistics.py     (pure; stdlib only)
+ src/octopussy/concealment_sweep.py   (pure; numpy only)
+    |
+    +--> figures/  (deterministic matplotlib PNGs)
 ```
 
-No arrows go upward. Core mathematical code stays independent; project analysis modules may call infrastructure because they are the importable implementation behind the thin script wrappers.
+## Domain modules
 
-```mermaid
-graph TD
-    YAML[manuscript/config.yaml] -->|experiment:| CFG[src/experiment_config.py]
+- **forgery_detection.py**: `Pigment`, `Artifact`, `SpectrumReading`;
+  `mix_spectrum`, `build_uv_response`, `read_artifact` (noised observation),
+  `_nnls_fit` (ridge NNLS), `estimate_mixture`, `screen_reading`,
+  `screen_artifact`, `screen_collection`; `ForgeryLevel` enum and
+  `ForgeryVerdict`. Detection = anachronism (NNLS + matched filter) + UV +
+  residual channels.
+- **cover_logistics.py**: `Edge`, `RailNetwork` (validated directed graph),
+  `min_cost_flow` (successive shortest paths / Bellman-Ford augmenting paths),
+  `golden_ticket_route` (Dijkstra), `plan_transfer`, `pack_circus_trains`;
+  `FlowResult`, `TransferPlan`, `LogisticsInfeasibleError`.
+- **concealment_sweep.py**: `RadiationSource`, `SweepGrid`,
+  `simulate_sweep` (seeded Poisson), `estimate_background` (median filter),
+  `anomaly_map` (Poisson z-score), `detect_hotspots` (local maxima),
+  `Container`, `mass_anomaly`, `fuse_concealment_report`; `Hotspot`,
+  `MassAnomaly`, `ConcealmentReport`.
 
-    A[scripts/optimization_analysis.py] -->|delegates| A2[src/analysis/]
-    A2 -->|reads| CFG
-    A2 -->|pure math calls| B[src/optimizer.py]
-    A2 -->|figures| FIG[src/figures/]
-    FIG -->|reads| CFG
-    FIG --> B
+## Adapter
 
-    DB[scripts/build_dashboard.py] --> DASH[src/dashboard.py]
-    DASH -->|reads| CFG
+`mission.py` implements the frozen BOND-API `MissionProvider`
+(brief/recon/plan/execute/debrief), runs the three pipelines deterministically,
+and returns a JSON-serializable `results` dict plus provenance
+(version, seed, sha256 `input_hash`). It also registers three gadgets
+(`forge_screen`, `route_cargo`, `sweep_concealment`).
 
-    I[scripts/z_generate_manuscript_variables.py] -->|calls| I2[src/manuscript_variables.py]
-    I2 -->|reads| CFG
-    I2 -->|reads| J[output/data/]
-    I2 -->|writes| K[output/manuscript/]
+## Figures & manuscript
 
-    L[tests/test_optimizer.py] -->|unit tests| B
-    M[tests/test_analysis_integration.py] -->|integration| A2
-    MAC[tests/test_analysis_coverage.py] -->|branch coverage| A2
-    TSS[tests/test_scripts_smoke.py] -->|AESTHETIC CLI| PF[scripts/00_preflight.py]
-    TSS --> GD[scripts/generate_api_docs.py]
-    TDOC[tests/test_documentation.py] -->|unit tests| DOC[src/documentation.py]
+`figures/` renders `forgery_fingerprints.png`, `rail_network.png`,
+`sweep_heatmap.png`. `manuscript_variables.py` hydrates `{{TOKEN}}`s from
+`manuscript/config.yaml` plus a live deterministic mission run.
 
-    B --> N((No imports from this repo))
-```
+## Boundaries
 
-## Infrastructure Modules Used by This Project
-
-| Module | Imported From | Used For |
-|---|---|---|
-| `infrastructure.scientific.stability` | `src/analysis/` | `check_numerical_stability()` across starting-point / step-size grid |
-| `infrastructure.scientific.benchmarking` | `src/analysis/` | `benchmark_function()` across problem dimensions |
-| `infrastructure.benchmark` | `src/benchmark_support.py` | Score deterministic benchmark facts; wall-clock observations stay runtime-only |
-| `infrastructure.core.logging.utils` | `scripts/*.py` | `get_logger(__name__)` for structured log output |
-| `infrastructure.core.progress` | `src/analysis/` | `ProgressBar` progress bars for long-running loops |
-| `infrastructure.reporting` | `src/analysis/`, `src/dashboard.py` | HTML dashboard generation, pipeline metrics |
-| `infrastructure.validation` | `src/analysis/` | Output integrity checks on generated figures and CSV |
-
-## Forbidden Patterns
-
-| Pattern | Why It Is Forbidden | Correct Alternative |
-|---|---|---|
-| Math inside `scripts/` (e.g., gradient update step) | Cannot be unit-tested without running the full script | Move to `src/`, add a test in `TestGradientDescent` |
-| `from infrastructure import ...` in `src/optimizer.py` | Breaks mathematical-layer purity | Keep optimizer primitives pure; call infrastructure from `src/analysis/` or `src/dashboard.py` |
-| `print()` inside `scripts/` | Bypasses structured logging; lost in CI output | Use `get_logger(__name__).info(...)` |
-| Hardcoded absolute output paths in pure math modules | Makes copied projects brittle | Keep paths relative to the project root and isolated to analysis/dashboard/manuscript-variable modules |
-| `unittest.mock`, `MagicMock`, `@patch` in `tests/` | Zero-mock policy | Compute real results with real numpy arrays |
-| Hardcoded step-size constants in `scripts/` or duplicate YAML parsing in `src/` | Configuration drift vs `manuscript/config.yaml` | Use `load_experiment_config()` from `src/experiment_config.py` |
-
-## How to Add a New Algorithm
-
-Follow these five steps in order:
-
-1. **Add the function to `src/optimizer.py`** — Pure math only; no I/O; add type hints and a Google-style docstring; export from `__init__.py`.
-
-2. **Write a test class in `tests/test_optimizer.py`** — Follow the zero-mock pattern; use fixed numpy arrays; assert mathematical properties; run `uv run pytest projects/working/bond/octopussy/tests/ --cov=projects/working/bond/octopussy/src --cov-fail-under=90`.
-
-3. **Add the analysis call in `src/analysis/`** — Import the new function from `src/optimizer.py`; run it inside the existing experiment loop or add a new loop; write results to `projects/working/bond/octopussy/output/data/` or `output/figures/`.
-
-4. **Update output conventions** — Document the new output file in `docs/output_conventions.md`; generated `output/` files stay untracked.
-
-5. **Update manuscript section** — Edit `manuscript/02_methodology.md` with the algorithm description using concrete file paths (e.g., `projects/working/bond/octopussy/src/optimizer.py::new_function()`); add any result variables to `src/manuscript_variables.py::generate_variables()`; reference figures with `\ref{fig:label}`.
+- Domain modules must not import `infrastructure` or `bond_api`.
+- `mission.py` is the only bond_api importer.
+- Scripts are thin; business logic stays in `src/`.

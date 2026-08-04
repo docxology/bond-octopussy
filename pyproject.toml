@@ -1,4 +1,4 @@
-# Code Project Configuration
+# OCTOPUSSY — FABERGÉ : special-agent mission software (BOND suite film package)
 # Inherits workspace settings from root pyproject.toml
 
 [build-system]
@@ -7,9 +7,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "octopussy"
-version = "2.5.2"
+version = "0.1.0"
 license = {text = "MIT"}
-description = "Fully-tested codebase with numerical optimization and analysis"
+description = "Octopussy: FABERGÉ — artifact forgery detection, circus-cover logistics, and concealed-device sweep (BOND film package)"
 authors = [
     {name = "Daniel Ari Friedman", email = "daniel@activeinference.institute"}
 ]
@@ -18,14 +18,22 @@ dependencies = [
     "numpy>=1.24.0",
     "matplotlib>=3.7.0",
     "pyyaml>=6.0",
-    "defusedxml>=0.7.1",
+    "bond-api",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
+    "ruff>=0.6.0",
+    "mypy>=1.10.0",
+    "types-PyYAML>=6.0",
 ]
+
+[tool.uv.sources]
+# FROZEN protocol dependency: bond-api is Layer 1 of the BOND suite and must be
+# resolvable from this film package. `uv sync --extra dev` before pytest.
+bond-api = { path = "/Users/4d/Documents/GitHub/template/projects/working/bond/bond-api" }
 
 [tool.pytest.ini_options]
 # RASP Strict Assertion: Tests must be clearly separated and structurally identifiable
@@ -33,7 +41,6 @@ pythonpath = [".", "src"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
-# `--strict-markers` prevents typos in marker definitions
 addopts = "-v --tb=short --strict-markers"
 
 [tool.coverage.run]
@@ -48,7 +55,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-# ≥90% on src/ is the enforced gate; live coverage % is tracked in
+# >=90% on src/ is the enforced gate; live coverage % is tracked in
 # docs/_generated/COUNTS.md (do not hardcode it here — it drifts).
 fail_under = 90
 show_missing = true
@@ -58,6 +65,21 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "raise NotImplementedError",
 ]
+
+[tool.mypy]
+# Project-local mypy settings (the monorepo root config has no mypy_path for
+# this package's src/ layout).
+python_version = "3.12"
+mypy_path = ["src"]
+explicit_package_bases = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = true
 
 [tool.uv]
 # Inherits workspace settings from root pyproject.toml

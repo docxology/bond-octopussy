@@ -1,25 +1,42 @@
+# Experiment plan — Octopussy: FABERGÉ
+# Declares the deterministic conditions, metric, and expectations.
+
+mission:
+  codename: "FABERGÉ"
+  seed: 7
+
 conditions:
-  - name: conservative_step
-    role: reference
-    description: "Stable gradient-descent step below the spectral bound."
-  - name: near_optimal_step
-    role: proposed
-    description: "Template-recommended step near the stable convergence region."
-  - name: aggressive_step
-    role: variant
-    description: "Stress condition near or above the stability boundary."
-metrics:
-  primary:
-    name: objective_value
-    direction: minimize
-protocol: "Run the deterministic quadratic optimization sweep with identical initialization, seeds, tolerance, and iteration cap across all declared step-size conditions."
+  forgery_exhibit:
+    artifacts: 4
+    pigments: 14
+    wavelengths_nm: [320, 760]
+    noise_std: 0.02
+  logistics_corridor:
+    source: "dover"
+    sink: "monastery"
+    payload_units: 3
+    deadline_min: 400
+    train_capacity: 2
+  concealment_sweep:
+    grid: [10, 10]
+    spacing_m: 2.0
+    background_cps: 40.0
+    source_intensity: 800.0
+    hotspot_threshold_z: 3.0
+
+primary_metric: "fused mission verdicts (forgery flag, transfer feasibility, sweep flagged items)"
+
 expected_figures:
-  - fig:convergence_plot
-  - fig:performance_benchmark
-  - fig:step_size_sensitivity
+  - "forgery_fingerprints.png"
+  - "rail_network.png"
+  - "sweep_heatmap.png"
+
 expected_tables:
-  - tbl:optimization_results
-baselines:
-  - conservative_step
-ablations:
-  - aggressive_step
+  - "mission_outcome.json"
+
+baseline:
+  - "genuine artifacts remain classified genuine (no false positives)"
+  - "an all-modern composition is flagged as forged or likely-forged"
+
+ablation:
+  - "separating the three channels independently exercises each domain module"

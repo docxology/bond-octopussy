@@ -1,11 +1,27 @@
-# Abstract {#sec:abstract}
+# Abstract
 
-This paper presents a convergence study of **fixed-step gradient descent** on a convex quadratic, framed as the computational exemplar of the [Research Project Template](https://github.com/docxology/template). The implementation lives in `projects/working/bond/octopussy/src/optimizer.py`; experiments and figures are orchestrated by `projects/working/bond/octopussy/scripts/optimization_analysis.py` and hydrated into the manuscript through `scripts/z_generate_manuscript_variables.py`, so tables and prose track `output/data/optimization_results.csv` after every pipeline run.
+**{{FABERGE_TITLE}}** (**{{FABERGE_SUBTITLE}}**) implements three
+investigative disciplines under the mission codename **{{FABERGE_CODENAME}}**.
 
-We evaluate {{CONFIG_NUM_STEP_SIZES}} step sizes from $\alpha = {{CONFIG_MIN_STEP_SIZE}}$ to $\alpha = {{CONFIG_MAX_STEP_SIZE}}$, spanning conservative, near-optimal, aggressive, and divergent regimes for a unit Hessian model. The build chain exercises template infrastructure end-to-end: scientific helpers (`infrastructure.scientific.stability`, `infrastructure.scientific.benchmarking`), validation, rendering (`infrastructure/rendering/pdf_renderer.py`), and reporting. Accessibility-oriented plotting defaults (colourblind-safe palette, 300 dpi exports) are centralized in `src/figures/` and `src/analysis/`.
+First, artifact forgery detection fingerprints painted objects by their
+combined spectral reflectance and UV fluorescence. A ridge-regularized
+non-negative least-squares fit identifies each object's pigment composition;
+whether any pigment post-dates the object's claimed era, how strongly the
+unexplained spectral residue resembles an anachronistic pigment (matched
+filter), and the UV fluorescence reading jointly yield a forgery disposition.
+Against a deterministic exhibit of {{FABERGE_NUM_ARTIFACTS}} artifacts drawn
+from a library of {{FABERGE_NUM_PIGMENTS}} pigments, the mission flags
+{{FABERGE_FLAGGED_FORGERY}} as forged or likely-forged, with the all-modern
+composition *{{FABERGE_FORGERY_WORST}}* carrying the highest score.
 
-Contributions are **methodological** and **architectural**. On the methods side, we relate empirical iteration counts and error decay to the scalar contraction factor $\rho(\alpha) = |1-\alpha|$ and document cases where runs hit $N_{\max} = {{CONFIG_MAX_ITERATIONS}}$ before meeting the gradient tolerance. On the architecture side, we demonstrate a zero-mock test suite on project `src/` (see [test_optimizer.py](https://github.com/docxology/template/blob/main/projects/working/bond/octopussy/tests/test_optimizer.py)), automated six-figure analysis, and reproducibility metadata (configuration hash, artifact counts) injected into [@sec:reproducibility].
+Second, circus-cover smuggling logistics route a payload of trained cargo
+over a {{FABERGE_NUM_SEGMENTS}}-segment rail corridor as minimum-cost flow via
+successive shortest paths; the resolved plan moves the payload with a makespan
+of {{FABERGE_LOGISTICS_MAKESPAN}} minutes using {{FABERGE_LOGISTICS_TRAINS}}
+circus trains, all within the stated capacity and deadline.
 
-**Results (this configuration):** {{RESULT_NUM_CONVERGED}} of {{CONFIG_NUM_STEP_SIZES}} grid points report `converged=True` in the CSV; non-convergent rows flag either slow progress at small $\alpha$ under the iteration cap or instability when $|1-\alpha| \geq 1$. The analytical minimizer remains $x^\ast = {{RESULT_OPTIMUM_X}}$ with $f(x^\ast) = {{RESULT_OPTIMUM_F}}$ for the configured $(A,b)$.
-
-**Keywords:** {{CONFIG_KEYWORDS}}
+Third, a concealed-device sweep over {{FABERGE_NUM_DETECTORS}} detectors
+fuses a radiation anomaly map with shape/mass anomaly screening of
+{{FABERGE_NUM_CONTAINERS}} cargo containers, flagging
+{{FABERGE_SWEEP_FLAGGED}}. Every pipeline is fully deterministic under a fixed
+seed ({{FABERGE_SEED}}), producing reproducible, audit-ready provenance.

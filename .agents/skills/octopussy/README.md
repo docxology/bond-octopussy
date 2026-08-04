@@ -1,3 +1,4 @@
-# octopussy skill
+# octopussy
 
-> Agent skill for [`octopussy`](../..). Load via an AGENTS.md-aware runtime.
+BOND film package (Octopussy 1983 / mission FABERGÉ): forgery detection,
+cover logistics, concealment sweep. Operative skill: `SKILL.md`.

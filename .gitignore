@@ -4,9 +4,14 @@
 __pycache__/
 *.pyc
 .benchmarks/
+.mypy_cache/
 
 # Egg-info from local installs (any location — guards against renamed-fork drift).
 **/*.egg-info/
 
 # Project-local virtualenvs (root .venv is shared)
 .venv/
+
+# Regenerable artifacts — script smoke tests write under output/ and must
+# leave the tree clean after a run.
+output/

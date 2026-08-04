@@ -1,5 +1,32 @@
-# Code-centric exemplar: optional monorepo adapters only.
-allow_infrastructure_imports:
-  - src/analysis/_infra.py
-  - src/_runtime.py
-  - src/benchmark_support.py
+# Layer contract — octopussy (FABERGÉ)
+# YAML mapping form (markdown tables are not valid YAML).
+
+surfaces:
+  domain_core:
+    paths:
+      - src/octopussy/forgery_detection.py
+      - src/octopussy/cover_logistics.py
+      - src/octopussy/concealment_sweep.py
+    rules:
+      - "pure domain logic: no infrastructure imports"
+      - "no bond_api imports; importable standalone (stdlib + numpy)"
+  mission_adapter:
+    paths:
+      - src/octopussy/mission.py
+    rules:
+      - "single thin adapter importing the frozen bond_api protocol"
+      - "exposes MissionProvider (discovery contract)"
+  helpers:
+    paths:
+      - src/octopussy/manuscript_variables.py
+      - src/octopussy/figures/
+    rules:
+      - "protocol-adjacent adapters; may import mission and domain modules"
+  scripts:
+    paths:
+      - scripts/
+    rules:
+      - "thin orchestrators; may import octopussy and bond_api"
+  tests:
+    rules:
+      - "real computation only; no mocks"

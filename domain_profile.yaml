@@ -1,49 +1,31 @@
-domain: code_research
-display_name: Code Research Exemplar
-required_packages:
-  - numpy
-  - matplotlib
-  - pytest
-preferred_outputs:
-  - pdf
-  - html
-  - docx
-  - epub
-validation_gates:
-  - experiment_method_design
-  - artifact_manifest
-  - evidence_grounding
-  - render_validation
-  - publication_readiness
-figure_types:
-  - convergence_plot
-  - performance_benchmark
-  - sensitivity_analysis
-citation_policy: official_or_scholarly
-source_policy: "Prefer primary project outputs, official package documentation, and scholarly optimization references."
+# Domain profile — Octopussy: FABERGÉ
+# Advisory controls only; used as validation inputs for agentic-research gates.
+
+domain: "special-agent investigation software (BOND film package)"
+film: "Octopussy (1983)"
+mission_codename: "FABERGÉ"
+
+concepts:
+  - "artifact forgery detection (spectral/UV fingerprinting)"
+  - "circus-cover smuggling logistics (min-cost flow)"
+  - "concealed nuclear device detection sweep (radiation, shape/mass anomaly)"
+
 review_gates:
-  - experiment_method_design
-  - render_validation
-  - publication_readiness
+  - "pytest --cov=src --cov-fail-under=90"
+  - "ruff check + ruff format clean"
+  - "mypy clean on src/ and scripts/"
+  - "no mock frameworks; deterministic fixed-seed computation"
+
+source_policy:
+  deterministic_scenarios: true
+  no_external_runtime_data: true
+  real_data_principle: "all numeric claims are computed or measured, never invented"
+
 artifact_expectations:
-  - output/data/manuscript_variables.json
-  - output/data/optimization_results.csv
-  - output/figures/convergence_plot.png
-  - output/reports/validation_report.json
-  - output/pdf/template_code_project_combined.pdf
+  figures: ["forgery_fingerprints.png", "rail_network.png", "sweep_heatmap.png"]
+  manuscript_variables_resolved: true
+  mission_outcome_json: true
+
 benchmark_rubric:
-  name: code-research-readiness
-  dimensions:
-    - name: output_validity
-      weight: 1.0
-    - name: reproducibility_bundle
-      weight: 1.0
-    - name: artifact_manifest
-      weight: 1.0
-    - name: evidence_grounding
-      weight: 2.0
-    - name: render_success
-      weight: 1.0
-    - name: publication_readiness
-      weight: 1.0
-llm_prompt_guidance: "Use generated optimization artifacts and manuscript variables as the evidence source; do not invent numeric results."
+  primary_metric: "forgery disposition consistency across seeds"
+  deterministic_seed: 7

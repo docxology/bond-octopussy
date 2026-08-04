@@ -1,31 +1,27 @@
 {
-  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@context": "https://w3id.org/codemeta/3.0",
   "@type": "SoftwareSourceCode",
+  "name": "Octopussy: FABERGÉ — Special-Agent Mission Software",
+  "codeRepository": "projects/working/bond/octopussy",
+  "dateCreated": "2026-08-04",
+  "license": "https://spdx.org/licenses/MIT",
+  "programmingLanguage": "Python",
+  "runtimePlatform": "Python 3",
   "author": [
     {
-      "@id": "https://orcid.org/0000-0001-6232-9096",
       "@type": "Person",
-      "affiliation": {
-        "@type": "Organization",
-        "name": "Active Inference Institute"
-      },
+      "givenName": "Daniel Ari",
       "familyName": "Friedman",
-      "givenName": "Daniel Ari"
+      "affiliation": "Active Inference Institute",
+      "@id": "https://orcid.org/0000-0001-6232-9096"
     }
   ],
-  "codeRepository": "https://github.com/docxology/octopussy",
-  "dateModified": "2026-07-10",
-  "identifier": "10.5281/zenodo.20417136",
   "keywords": [
-    "optimization algorithms",
-    "gradient descent",
-    "convergence analysis",
-    "numerical methods",
-    "mathematical programming",
-    "reproducible research",
-    "infrastructure automation"
+    "artifact forgery detection",
+    "spectral fingerprinting",
+    "min-cost flow",
+    "radiation anomaly detection",
+    "mass anomaly screening"
   ],
-  "license": "https://spdx.org/licenses/MIT",
-  "name": "Convergence Analysis of Gradient Descent Optimization",
-  "version": "2.5.2"
+  "description": "BOND film package implementing three deterministic investigative disciplines behind the frozen BOND-API MissionProvider protocol: spectral/UV forgery detection, circus-cover min-cost-flow logistics, and concealed-device sweep by radiation and mass-anomaly fusion."
 }

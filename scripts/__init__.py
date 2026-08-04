@@ -1,1 +1,1 @@
-"""Thin orchestrator scripts for octopussy."""
+"""Thin mission-phase orchestrators for Octopussy: FABERGÉ."""

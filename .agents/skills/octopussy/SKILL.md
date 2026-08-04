@@ -1,53 +1,61 @@
 ---
 name: octopussy
-description: Code-centric optimization research exemplar — gradient descent, convergence analysis, automated figures, dashboard, and publication-quality PDF.
-version: 0.1.0
-author: docxology
-license: MIT
-tags: [exemplar, code, optimization, thin-orchestrator]
+description: Use when working inside the Octopussy: FABERGÉ BOND film package (forgery detection, cover logistics, concealment sweep / MissionProvider).
+version: 1.0.0
+tags: [bond, faberge, forgery-detection, min-cost-flow, mission-provider]
 ---
 
 # octopussy
 
-Project-scoped skill for the in-repo exemplar at
-`projects/working/bond/octopussy/`. Load this when working inside the project.
+Build/maintain the **Octopussy: FABERGÉ** BOND film package at
+`projects/working/bond/octopussy/`. This is a **local-only** package: no
+remote, never push, scope = this directory only.
 
-## When to Use
+## When to use
 
-- Working inside the `octopussy` exemplar — running scripts, editing source,
-  or regenerating outputs.
-- Forking this exemplar as the starting scaffold for a new research project.
-- Validating that the exemplar's contracts (thin-orchestrator, layer boundaries,
-  no-mocks testing) still hold after changes.
+- Editing the forgery / logistics / concealment domain modules.
+- Maintaining the `MissionProvider` (frozen `bond_api` protocol) or its gadgets.
+- Regenerating figures, manuscript variables, or mission artifacts.
+- Verifying the package against the BOND guardrails.
 
-## Quick Reference
+## Quick reference
 
 ```bash
-# From the repository root
-uv run pytest projects/working/bond/octopussy/tests --cov=projects/working/bond/octopussy/src --cov-fail-under=90
-uv run python scripts/pipeline/stage_02_analysis.py --project templates/octopussy
-uv run python scripts/pipeline/stage_03_render.py --project templates/octopussy
-uv run python scripts/pipeline/stage_04_validate.py --project templates/octopussy
-uv run python scripts/pipeline/stage_05_copy.py --project templates/octopussy
+uv sync --extra dev            # bond-api is a local path dependency
+uv run pytest tests/ --cov=src --cov-fail-under=90
+uv run ruff check src/ scripts/ tests/ && uv run ruff format src/ scripts/ tests/
+uv run mypy src/ scripts/
+uv run python scripts/demo_mission.py
+uv run python scripts/z_generate_manuscript_variables.py
 ```
+
+Discovery: `bond_api.load_provider('octopussy', search_paths=['src'])`
+imports `octopussy.mission.MissionProvider`.
+
+## Modules
+
+- `src/octopussy/forgery_detection.py` — spectral/UV forgery screen (ridge
+  NNLS unmixing + UV fluorescence + matched-filter anachronism).
+- `src/octopussy/cover_logistics.py` — min-cost flow (successive shortest
+  paths), golden-ticket Dijkstra, circus-train packing.
+- `src/octopussy/concealment_sweep.py` — radiation anomaly + shape/mass
+  anomaly fusion.
+- `src/octopussy/mission.py` — thin `bond_api` adapter + gadget registry.
 
 ## Pitfalls
 
-- **Keep scripts thin.** Business logic belongs in `src/` or shared
-  `infrastructure/`, not in `scripts/`.
-- **No mocks.** All tests must use real data, real files, and real
-  computation.
-- **Outputs are disposable.** Never hand-edit `output/` — regenerate from
-  source and config.
-- **Keep tracked benchmarks deterministic.** Serialize reproducible inputs,
-  objective values, and checks; keep wall-clock timing as a runtime-only
-  diagnostic.
-- **Run from the repo root.** Commands assume the template monorepo root
-  as working directory unless the child `AGENTS.md` states otherwise.
+- **Domain purity**: the three domain modules must stay free of
+  `infrastructure` and `bond_api` imports (mission.py is the only importer).
+- **Determinism**: all RNG via `numpy.random.default_rng(seed)` with seed 7;
+  no wall-clock in persisted artifacts.
+- **No mocks**: real computation in tests only.
+- **Manuscript tokens**: never hand-author metrics in prose; add tokens to
+  `manuscript_variables.py` and let the cross-reference test gate them.
+- **Deep-path E402**: script `sys.path` bootstrap imports need `# noqa: E402`.
 
-## Cross-refs
+## Verify before done
 
-- Project contract: [`AGENTS.md`](../../../AGENTS.md)
-- README: [`README.md`](../../../README.md)
-- TODO: [`TODO.md`](../../../TODO.md)
-- Exemplar roster: [`projects/AGENTS.md`](../../../../../AGENTS.md)
+1. pytest gate ≥90% coverage (live count in `docs/_generated/COUNTS.md`)
+2. ruff check + format, mypy clean
+3. `rg "template[_]code_project"` → zero
+4. `git status` clean after a path-scoped commit (`git add -A` here only)

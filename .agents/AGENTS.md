@@ -1,12 +1,4 @@
-# .agents — AGENTS.md
+# .agents
 
-Per-folder technical reference for the project-local agent scaffolding.
-
-| Subdirectory | Purpose |
-| --- | --- |
-| [`skills/`](skills/AGENTS.md) | Project-local skills. Each ships `SKILL.md` with YAML frontmatter. |
-
-## When to update
-
-- A new skill specific to this template lands → add a folder under
-  `skills/<name>/` with `SKILL.md`, `AGENTS.md`, `README.md`.
+Agent-facing catalog for the Octopussy: FABERGÉ package. The package-level
+Hermes skill lives at `.agents/skills/octopussy/SKILL.md`.

@@ -1,13 +1,5 @@
-# octopussy/data
+# data
 
-Project-maintained **inputs** for the code exemplar (not pipeline outputs).
-
-## Quick reference
-
-| File | Role |
-| --- | --- |
-| `claim_ledger.yaml` | Source-backed numeric and artifact claims for evidence validation |
-
-Generated analysis outputs belong under `output/` during pipeline runs, not here.
-
-Schema and edit protocol: [`AGENTS.md`](AGENTS.md).
+Programmatic inputs/overlays for the FABERGÉ package. `output/` (regenerated
+artifacts) is git-ignored; this directory holds tracked, deterministic inputs
+such as `claim_ledger.yaml`.

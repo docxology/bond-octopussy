@@ -1,52 +1,36 @@
-#!/usr/bin/env python3
-"""Thin orchestrator: generate and inject manuscript variables.
+"""Hydrate manuscript tokens and render the FABERGÉ figures.
 
-Reads experiment config and analysis outputs, writes
-``output/data/manuscript_variables.json``, and substitutes
-``{{TOKEN}}`` markers in manuscript sections into
-``output/manuscript/`` for PDF rendering.
-
-All computation lives in ``src/manuscript_variables``;
-all injection lives in
-``infrastructure.rendering.manuscript_injection``.
-
-Exit codes:
-    0   variables written and injected successfully
-    1   unexpected error
+Writes ``output/data/manuscript_variables.json`` and the resolved manuscript
+tree under ``output/manuscript/``, then renders all FABERGÉ figures. Runs in
+strict mode: any unresolved ``{{TOKEN}}`` in a numbered section fails it.
 """
 
 from __future__ import annotations
 
-import argparse
+import json
+import os
 import sys
 from pathlib import Path
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_PROJECT_ROOT))
-sys.path.insert(0, str(_PROJECT_ROOT.parents[2]))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))  # noqa: E402
+
+from octopussy.figures import generate_all  # noqa: E402
+from octopussy.manuscript_variables import generate_variables, resolve_manuscript_tree  # noqa: E402
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
-    """CLI entry point."""
-    parser = argparse.ArgumentParser(description="Generate manuscript variables for octopussy")
-    parser.add_argument(
-        "--allow-draft",
-        action="store_true",
-        help="Allow N/A fallbacks when analysis outputs are missing (non-pipeline draft mode)",
+    variables = generate_variables()
+    data_dir = PROJECT_ROOT / "output" / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "manuscript_variables.json").write_text(
+        json.dumps(variables, sort_keys=True, indent=2), encoding="utf-8"
     )
-    args = parser.parse_args()
-
-    from infrastructure.rendering.manuscript_injection import write_resolved_manuscript_tree
-    from src.manuscript_variables import generate_variables, save_variables
-
-    variables = generate_variables(
-        _PROJECT_ROOT,
-        require_analysis_outputs=not args.allow_draft,
-    )
-    out_path = _PROJECT_ROOT / "output" / "data" / "manuscript_variables.json"
-    save_variables(variables, out_path)
-    write_resolved_manuscript_tree(_PROJECT_ROOT, variables)
-    print(str(out_path))
+    output_dir, resolved = resolve_manuscript_tree(variables)
+    figures = generate_all(PROJECT_ROOT / "output" / "figures")
+    print(f"resolved {len(resolved)} manuscript sections to {output_dir}")
+    print(f"rendered {len(figures)} figures")
     return 0
 
 
