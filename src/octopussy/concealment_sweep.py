@@ -27,6 +27,7 @@ import numpy as np
 __all__ = [
     "CATALOG_CATEGORIES",
     "CATALOG_SIZE",
+    "DEFAULT_CONTAINERS",
     "Container",
     "ConcealmentEntry",
     "ConcealmentReport",
@@ -214,14 +215,16 @@ def detect_hotspots(
     counts: np.ndarray,
     anomaly: np.ndarray,
     threshold: float,
-    *,
-    min_score: float = 0.0,
 ) -> tuple[Hotspot, ...]:
     """Locate local-maximum hotspots whose z-score clears ``threshold``.
 
     Returns peaks in deterministic (row, column) order. A cell is a hotspot
-    when its anomaly score is ``>=`` every neighbour's score and equals or
-    exceeds the given threshold.
+    when its count is ``>=`` every 8-connected neighbour's count and its
+    anomaly z-score equals or exceeds ``threshold``.
+
+    ``threshold`` is the single sensitivity knob: an earlier ``min_score``
+    keyword was removed because ``score < threshold or score < min_score`` is
+    exactly ``score < max(threshold, min_score)`` — two names for one dial.
     """
     counts = np.asarray(counts, dtype=float)
     anomaly = np.asarray(anomaly, dtype=float)
@@ -230,7 +233,7 @@ def detect_hotspots(
     for i in range(nx):
         for j in range(ny):
             score = float(anomaly[i, j])
-            if score < threshold or score < min_score:
+            if score < threshold:
                 continue
             value = float(counts[i, j])
             neighbours = _neighbour_values(counts, i, j, nx, ny)

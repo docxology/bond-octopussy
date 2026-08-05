@@ -31,7 +31,23 @@ def test_network_nodes_sorted():
 
 def test_min_cost_flow_zero_demand():
     result = cl.min_cost_flow(_net(), "dover", "monastery", 0)
-    assert result.feasible and result.total_flow == 0 and result.total_cost == 0
+    assert result.total_flow == 0 and result.total_cost == 0 and result.flow_per_edge == {}
+
+
+def test_min_cost_flow_rejects_self_transfer():
+    """A source==sink request must raise, not spin forever.
+
+    Regression: the augmenting-path search returned an empty move list with a
+    zero bottleneck for a self-transfer, so ``min_cost_flow`` pushed zero units
+    per iteration and never terminated.
+    """
+    with pytest.raises(ValueError, match="distinct"):
+        cl.min_cost_flow(_net(), "dover", "dover", 3)
+
+
+def test_plan_transfer_rejects_self_transfer():
+    with pytest.raises(ValueError, match="distinct"):
+        cl.plan_transfer(_net(), "dover", "dover", 3, deadline=400)
 
 
 def test_min_cost_flow_negative_demand():
@@ -46,8 +62,11 @@ def test_min_cost_flow_unknown_node():
 
 def test_min_cost_flow_success():
     result = cl.min_cost_flow(_net(), "dover", "monastery", 3)
-    assert result.feasible and result.total_flow == 3
+    assert result.total_flow == 3
     assert result.total_cost > 0
+    # Every routed edge must respect its declared capacity.
+    segments = _net().segments
+    assert all(units <= segments[index].capacity for index, units in result.flow_per_edge.items())
 
 
 def test_min_cost_flow_infeasible():

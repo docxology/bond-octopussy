@@ -4,7 +4,7 @@
 
 paper:
   title: "Octopussy: FABERGÉ — Special-Agent Mission Software"
-  subtitle: "Spectral/UV Forgery Detection, Circus-Cover Logistics, and Concealed-Device Sweep"
+  subtitle: "Paired Detection: Spectral/UV Forgery Screening and Varnish Dating, Rail Min-Cost Flow and Trainset Circulation, Concealed-Device Sweep and Source Localization"
   version: "0.1.0"
   date: "2026-08-04"
 
@@ -25,13 +25,21 @@ publication:
 
 keywords:
   - "artifact forgery detection"
-  - "spectral fingerprinting"
+  - "spectral unmixing"
+  - "non-negative least squares"
   - "UV fluorescence"
+  - "varnish ageing kinetics"
+  - "Beer-Lambert absorption"
   - "min-cost flow"
   - "rail logistics"
+  - "bipartite matching"
+  - "minimum path cover"
+  - "assignment problem"
   - "radiation anomaly detection"
   - "mass anomaly screening"
   - "concealed device detection"
+  - "source localization"
+  - "Gauss-Newton nonlinear least squares"
   - "deterministic computation"
 
 metadata:

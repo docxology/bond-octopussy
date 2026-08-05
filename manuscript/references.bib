@@ -1,20 +1,43 @@
-@article{nasdala2004faberge,
-  author  = {Nasdala, Lutz},
-  title   = {Faberg{\'e}: workshop of the imperial jeweler},
-  journal = {Gems \& Gemology},
-  year    = {2004},
-  volume  = {40},
-  number  = {4},
-  pages   = {328--329}
+% FABERGÉ bibliography — real, checkable sources for the models this package
+% implements. Every entry corresponds to a method actually used in src/, and
+% every entry is cited from a numbered manuscript section.
+%
+% Two entries carried by the phase-2 scaffold were removed in the phase-5
+% review because their bibliographic details could not be confirmed against a
+% primary source: a "Nasdala 2004 Fabergé" note in Gems & Gemology, and a
+% "Lawson 2004, hyperspectral unmixing for pigment identification" article in
+% Studies in Conservation — the latter appearing to conflate Lawson & Hanson's
+% 1974 NNLS monograph with the unmixing literature. An unverifiable citation is
+% worse than a missing one, so they were deleted rather than reshaped.
+
+% ---------------------------------------------------------------- unmixing --
+@book{lawson1974solving,
+  author    = {Lawson, Charles L. and Hanson, Richard J.},
+  title     = {Solving Least Squares Problems},
+  publisher = {Prentice-Hall},
+  address   = {Englewood Cliffs, NJ},
+  year      = {1974}
 }
 
-@article{lawson2004hyperspectral,
-  author  = {Lawson, Richard and others},
-  title   = {Hyperspectral unmixing for pigment identification},
+@article{keshava2002spectral,
+  author  = {Keshava, Nirmal and Mustard, John F.},
+  title   = {Spectral Unmixing},
+  journal = {IEEE Signal Processing Magazine},
+  year    = {2002},
+  volume  = {19},
+  number  = {1},
+  pages   = {44--57}
+}
+
+% ----------------------------------------------------- varnish / materials --
+@article{delarie1982fluorescence,
+  author  = {de la Rie, E. Ren{\'e}},
+  title   = {Fluorescence of Paint and Varnish Layers (Part I)},
   journal = {Studies in Conservation},
-  year    = {2004},
-  volume  = {49},
-  pages   = {345--350}
+  year    = {1982},
+  volume  = {27},
+  number  = {1},
+  pages   = {1--7}
 }
 
 @book{feller1994accelerated,
@@ -34,12 +57,52 @@
   year      = {2010}
 }
 
+% -------------------------------------------------------- flows / shortest --
+@book{ford1962flows,
+  author    = {Ford, L. R. and Fulkerson, D. R.},
+  title     = {Flows in Networks},
+  publisher = {Princeton University Press},
+  address   = {Princeton, NJ},
+  year      = {1962}
+}
+
 @book{ahuja1993network,
   author    = {Ahuja, Ravindra K. and Magnanti, Thomas L. and Orlin, James B.},
   title     = {Network Flows: Theory, Algorithms, and Applications},
   publisher = {Prentice Hall},
   address   = {Upper Saddle River, NJ},
   year      = {1993}
+}
+
+@article{bellman1958routing,
+  author  = {Bellman, Richard},
+  title   = {On a Routing Problem},
+  journal = {Quarterly of Applied Mathematics},
+  year    = {1958},
+  volume  = {16},
+  number  = {1},
+  pages   = {87--90}
+}
+
+@article{dijkstra1959note,
+  author  = {Dijkstra, Edsger W.},
+  title   = {A Note on Two Problems in Connexion with Graphs},
+  journal = {Numerische Mathematik},
+  year    = {1959},
+  volume  = {1},
+  number  = {1},
+  pages   = {269--271}
+}
+
+% -------------------------------------------------- fleets / matching / OR --
+@article{dantzig1954minimizing,
+  author  = {Dantzig, George B. and Fulkerson, D. R.},
+  title   = {Minimizing the Number of Tankers to Meet a Fixed Schedule},
+  journal = {Naval Research Logistics Quarterly},
+  year    = {1954},
+  volume  = {1},
+  number  = {3},
+  pages   = {217--222}
 }
 
 @article{caprara2002train,
@@ -70,6 +133,47 @@
   volume  = {2},
   number  = {1--2},
   pages   = {83--97}
+}
+
+% --------------------------------------------------- radiation / detection --
+@book{knoll2010radiation,
+  author    = {Knoll, Glenn F.},
+  title     = {Radiation Detection and Measurement},
+  publisher = {Wiley},
+  address   = {Hoboken, NJ},
+  edition   = {4th},
+  year      = {2010}
+}
+
+@article{currie1968limits,
+  author  = {Currie, Lloyd A.},
+  title   = {Limits for Qualitative Detection and Quantitative Determination: Application to Radiochemistry},
+  journal = {Analytical Chemistry},
+  year    = {1968},
+  volume  = {40},
+  number  = {3},
+  pages   = {586--593}
+}
+
+% ------------------------------------------------------------ optimization --
+@article{kiefer1953sequential,
+  author  = {Kiefer, J.},
+  title   = {Sequential Minimax Search for a Maximum},
+  journal = {Proceedings of the American Mathematical Society},
+  year    = {1953},
+  volume  = {4},
+  number  = {3},
+  pages   = {502--506}
+}
+
+@article{marquardt1963algorithm,
+  author  = {Marquardt, Donald W.},
+  title   = {An Algorithm for Least-Squares Estimation of Nonlinear Parameters},
+  journal = {Journal of the Society for Industrial and Applied Mathematics},
+  year    = {1963},
+  volume  = {11},
+  number  = {2},
+  pages   = {431--441}
 }
 
 @book{nocedal2006numerical,

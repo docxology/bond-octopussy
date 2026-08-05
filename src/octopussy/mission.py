@@ -44,9 +44,13 @@ from octopussy import source_locator as locator
 from octopussy import varnish_ageing as varnish
 
 __all__ = [
-    "FILM",
     "CODENAME",
+    "FILM",
+    "PIPELINES",
+    "PIPELINE_COUNT",
     "SEED",
+    "SWEEP_DETECTORS",
+    "SWEEP_GRID",
     "MissionProvider",
     "gadget_registry",
     "register_gadgets",
@@ -60,6 +64,19 @@ PACKAGE_VERSION = "0.1.0"
 #: Fixed deterministic seed for every pipeline in this package.
 SEED = 7
 
+#: The investigative pipelines :func:`run_faberge` drives, in execution order.
+#: This tuple *is* the contract its result keys are checked against, so the
+#: count in prose can never drift from the count in code.
+PIPELINES: tuple[str, ...] = (
+    "forgery",
+    "logistics",
+    "concealment",
+    "varnish",
+    "rolling_stock",
+    "source_locator",
+)
+PIPELINE_COUNT: int = len(PIPELINES)
+
 #: Scenario parameters for the execute stage (deterministic scenario).
 _FORGERY_NOISE = 0.02
 _LOGISTICS_SOURCE = "dover"
@@ -67,7 +84,11 @@ _LOGISTICS_SINK = "monastery"
 _LOGISTICS_UNITS = 3
 _LOGISTICS_DEADLINE = 400
 _LOGISTICS_CAPACITY = 2
-_SWEEP_GRID = sweep.SweepGrid((0.0, 0.0), 2.0, 10, 10)
+#: The mission's detector lattice. Public because manuscript variables and the
+#: brief derive their detector counts from it rather than restating a literal.
+SWEEP_GRID = sweep.SweepGrid((0.0, 0.0), 2.0, 10, 10)
+#: Number of detectors in :data:`SWEEP_GRID`, derived — never hand-written.
+SWEEP_DETECTORS = int(SWEEP_GRID.nx * SWEEP_GRID.ny)
 _SWEEP_BACKGROUND = 40.0
 _SWEEP_SOURCE = sweep.RadiationSource((7.0, 7.0), 800.0)
 _SWEEP_THRESHOLD = 3.0
@@ -110,11 +131,14 @@ def _input_hash(codename: str, objectives: tuple[str, ...], plan: MissionPlan) -
 
 
 def run_faberge(seed: int = SEED) -> dict[str, object]:
-    """Run the three investigative pipelines; return structured results.
+    """Run all six investigative pipelines; return structured results.
 
-    Deterministic under the fixed ``seed``: the forgery screen, the
-    logistics plan, and the concealment sweep are all computed (never faked),
-    and the returned dict is JSON-serializable for mission reports.
+    The returned mapping has exactly :data:`PIPELINE_COUNT` top-level keys —
+    ``forgery``, ``logistics``, ``concealment``, ``varnish``,
+    ``rolling_stock``, ``source_locator`` — one per pipeline. Deterministic
+    under the fixed ``seed``: every verdict, route, hotspot, age estimate,
+    trainset chain and source fix is computed (never faked), and the result is
+    JSON-serializable for mission reports.
     """
     # 1) Forgery detection — spectral/UV screen of the exhibit.
     rng = np.random.default_rng(seed)
@@ -159,13 +183,13 @@ def run_faberge(seed: int = SEED) -> dict[str, object]:
     }
 
     # 3) Concealment sweep — radiation + shape/mass anomaly fusion.
-    positions, counts = sweep.simulate_sweep(_SWEEP_GRID, _SWEEP_BACKGROUND, (_SWEEP_SOURCE,), seed=seed)
+    positions, counts = sweep.simulate_sweep(SWEEP_GRID, _SWEEP_BACKGROUND, (_SWEEP_SOURCE,), seed=seed)
     background = sweep.estimate_background(counts)
     anomaly = sweep.anomaly_map(counts, background)
     hits = sweep.detect_hotspots(counts, anomaly, _SWEEP_THRESHOLD)
     report = sweep.fuse_concealment_report(hits, sweep.DEFAULT_CONTAINERS)
     concealment = {
-        "grid_size": int(_SWEEP_GRID.nx * _SWEEP_GRID.ny),
+        "grid_size": SWEEP_DETECTORS,
         "hotspots": [{"position": list(h.position), "score": round(float(h.score), 3)} for h in hits],
         "suspicious": [
             {"kind": e.kind, "name": e.name, "score": round(float(e.score), 3), "detail": e.detail}
@@ -214,23 +238,33 @@ def run_faberge(seed: int = SEED) -> dict[str, object]:
         "depot_assignment_cost": float(sum(cost for _, _, cost in depot)),
     }
 
-    # 6) Source localization — locate the concealed emitter from the sweep.
-    localized = locator.locate_from_sweep(_SWEEP_GRID, counts, background)
+    # 6) Source localization — locate the concealed emitter from the sweep,
+    #    with the approximate positional uncertainty the fit implies.
+    localized = locator.locate_from_sweep(SWEEP_GRID, counts, background)
     position_error = (
         (localized.position[0] - _SWEEP_SOURCE.position[0]) ** 2
         + (localized.position[1] - _SWEEP_SOURCE.position[1]) ** 2
     ) ** 0.5
+    std_x, std_y, _ = locator.localization_uncertainty(
+        SWEEP_GRID.detector_positions(),
+        counts.ravel(),
+        float(np.mean(background)),
+        localized,
+        SWEEP_GRID.standoff,
+    )
     source_block = {
         "estimated_position": [round(float(p), 3) for p in localized.position],
         "true_position": list(_SWEEP_SOURCE.position),
+        "true_intensity": float(_SWEEP_SOURCE.intensity),
         "error_m": round(float(position_error), 3),
+        "position_std_m": round(float((std_x * std_x + std_y * std_y) ** 0.5), 3),
         "intensity": round(float(localized.intensity), 1),
         "residual": round(float(localized.residual_norm), 3),
         "converged": localized.converged,
         "iterations": localized.iterations,
     }
 
-    return {
+    results: dict[str, object] = {
         "forgery": forgery,
         "logistics": logistics_results,
         "concealment": concealment,
@@ -238,6 +272,9 @@ def run_faberge(seed: int = SEED) -> dict[str, object]:
         "rolling_stock": rolling_block,
         "source_locator": source_block,
     }
+    if tuple(results) != PIPELINES:  # pragma: no cover — structural invariant
+        raise AssertionError(f"run_faberge result keys {tuple(results)} drifted from PIPELINES {PIPELINES}")
+    return results
 
 
 class MissionProvider:  # noqa: N801 — class name is fixed by the discovery contract
@@ -246,7 +283,14 @@ class MissionProvider:  # noqa: N801 — class name is fixed by the discovery co
     film = FILM
 
     def brief(self) -> MissionBrief:
-        """Declare the FABERGÉ mission: three investigative objectives."""
+        """Declare the FABERGÉ mission: the three headline investigative objectives.
+
+        Three objectives, six pipelines: each objective is served by a headline
+        module plus a depth module (forgery + varnish ageing, logistics +
+        rolling stock, sweep + source localization). The objective tuple is
+        part of the mission fingerprint (:func:`_input_hash`), so it is kept
+        stable across depth work.
+        """
         return MissionBrief(
             film=self.film,
             codename=CODENAME,
@@ -258,7 +302,7 @@ class MissionProvider:  # noqa: N801 — class name is fixed by the discovery co
             assets=(
                 Asset(kind="scenario", name="exhibit", payload={"artifacts": forge.ARTIFACT_COUNT}),
                 Asset(kind="scenario", name="corridor", payload={"segments": logistics.SEGMENT_COUNT}),
-                Asset(kind="scenario", name="sweep", payload={"detectors": int(_SWEEP_GRID.nx * _SWEEP_GRID.ny)}),
+                Asset(kind="scenario", name="sweep", payload={"detectors": SWEEP_DETECTORS}),
             ),
             constraints=(
                 Constraint(kind="determinism", detail="fixed seed, no random or wall-clock dependence"),
@@ -277,7 +321,7 @@ class MissionProvider:  # noqa: N801 — class name is fixed by the discovery co
                 Finding(label="corridor", detail=f"{logistics.SEGMENT_COUNT} rail segments form the circus corridor"),
                 Finding(
                     label="sweep",
-                    detail=f"{int(_SWEEP_GRID.nx * _SWEEP_GRID.ny)} detectors in the concealed-device sweep",
+                    detail=f"{SWEEP_DETECTORS} detectors in the concealed-device sweep",
                 ),
                 Finding(label="constraints", detail="deterministic execution and cover-capacity limits apply"),
             )
@@ -298,7 +342,7 @@ class MissionProvider:  # noqa: N801 — class name is fixed by the discovery co
         )
 
     def execute(self, plan: MissionPlan) -> MissionOutcome:
-        """Run the three pipelines and return their verdicts with provenance."""
+        """Run all six pipelines and return their verdicts with provenance."""
         results = run_faberge(SEED)
         provenance = Provenance(
             package_version=PACKAGE_VERSION,
@@ -312,8 +356,11 @@ class MissionProvider:  # noqa: N801 — class name is fixed by the discovery co
         """Summarize the mission and record FABERGÉ's standing lessons."""
         lessons = [
             "anachronistic pigment chemistry is reliable forgery evidence when measured, not assumed",
+            "varnish yellowing dates the surface independently of the pigment screen — two channels, one verdict",
             "min-cost flow routes the payload on time only when capacity and deadline are respected",
+            "the trainset count is a matching problem, not a guess: minimum path cover bounds the fleet",
             "radiation and mass anomalies fuse into a single prioritized sweep report",
+            "flagging a device is not finding it — weighted Gauss-Newton fixes where it sits",
             "the sample royal_egg carries a mass anomaly consistent with a concealed dense core",
         ]
         return Debrief(outcome=outcome, lessons=tuple(lessons))

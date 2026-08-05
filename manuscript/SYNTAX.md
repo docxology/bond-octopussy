@@ -24,5 +24,13 @@ Reference generated figures with Pandoc-crossref. All render from
 
 ## Citations
 
-Use Pandoc citation syntax, e.g. `[@nasdala2004faberge]`; bib entries live in
+Use Pandoc citation syntax, e.g. `[@keshava2002spectral]` or a multi-key group
+`[@feller1994accelerated; @horie2010materials]`; bib entries live in
 `references.bib`.
+
+`tests/test_manuscript_variables.py::test_bibliography_and_citations_agree`
+enforces both directions: every `@key` cited in a numbered section must exist
+in `references.bib`, and every entry in `references.bib` must be cited by at
+least one section. Add the source and the citation in the same change, and
+never add an entry whose bibliographic details you have not confirmed — an
+uncheckable citation is worse than a missing one.

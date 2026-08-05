@@ -115,3 +115,10 @@ def test_locate_from_sweep_wrapper():
     estimate = sl.locate_from_sweep(grid, counts, background)
     error = ((estimate.position[0] - TRUE_POS[0]) ** 2 + (estimate.position[1] - TRUE_POS[1]) ** 2) ** 0.5
     assert error < 2.0
+
+
+def test_sweep_grid_satisfies_detector_lattice_protocol():
+    """locate_from_sweep is typed against a structural contract, not `object`."""
+    grid, _, _, _ = _scenario()
+    assert isinstance(grid, sl.DetectorLattice)
+    assert not isinstance(object(), sl.DetectorLattice)

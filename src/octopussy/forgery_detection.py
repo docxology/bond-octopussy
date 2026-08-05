@@ -34,9 +34,14 @@ import numpy as np
 
 __all__ = [
     "ARTIFACT_COUNT",
+    "BAND_COUNT",
+    "BAND_MAX_NM",
+    "BAND_MIN_NM",
+    "DEFAULT_EXHIBIT",
     "ForgeryLevel",
     "ForgeryVerdict",
     "PIGMENT_COUNT",
+    "PIGMENT_LIBRARY",
     "Pigment",
     "Artifact",
     "SpectrumReading",
@@ -46,12 +51,18 @@ __all__ = [
     "measure_spectrum",
     "mix_spectrum",
     "read_artifact",
+    "screen_artifact",
     "screen_collection",
     "screen_reading",
 ]
 
+#: Spectrophotometer band grid limits (nm) and resolution.
+BAND_MIN_NM: float = 320.0
+BAND_MAX_NM: float = 760.0
+BAND_COUNT: int = 24
+
 #: Wavelength grid (nm) of the UV-VIS spectrophotometer, 320–760 nm.
-WAVELENGTH_BANDS: np.ndarray = np.linspace(320.0, 760.0, 24, dtype=float)
+WAVELENGTH_BANDS: np.ndarray = np.linspace(BAND_MIN_NM, BAND_MAX_NM, BAND_COUNT, dtype=float)
 _N_BANDS: int = int(WAVELENGTH_BANDS.size)
 
 #: Weighting of the three evidence channels in the final forgery score.

@@ -69,13 +69,21 @@ def test_detect_hotspots_no_hits_clear_background():
     assert hits == ()
 
 
-def test_detect_hotspots_min_score_filter():
+def test_detect_hotspots_threshold_strictly_filters():
+    """A higher threshold must actually discard peaks, not merely 'not add' any.
+
+    ``len(strict) <= len(loose)`` is true for any monotone filter and would
+    pass even if the threshold were ignored, so this pins a strict reduction
+    and checks every survivor really clears the higher bar.
+    """
     counts = cs.simulate_sweep(_grid(), 40.0, (cs.RadiationSource((7.0, 7.0), 600.0),), seed=7)[1]
     bg = cs.estimate_background(counts)
     anom = cs.anomaly_map(counts, bg)
-    all_hits = cs.detect_hotspots(counts, anom, 0.5)
-    filtered = cs.detect_hotspots(counts, anom, 0.5, min_score=10.0)
-    assert len(filtered) <= len(all_hits)
+    loose = cs.detect_hotspots(counts, anom, 0.5)
+    strict = cs.detect_hotspots(counts, anom, 10.0)
+    assert len(loose) > len(strict), "raising the threshold discarded nothing — is it being applied?"
+    assert all(hit.score >= 10.0 for hit in strict)
+    assert set(strict).issubset(set(loose))
 
 
 def test_container_validation():

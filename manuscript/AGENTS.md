@@ -24,10 +24,23 @@ section-modification workflow. Repository-wide agent rules live in
 ## {{VARIABLE}} protocol
 
 Numeric and outcome values **must** flow through
-`src/octopussy/manuscript_variables.py::generate_variables()` as `{{TOKEN}}`,
-never hand-authored in prose. Add a new token to that function, then exercise
-`tests/test_manuscript_variables.py::test_all_manuscript_tokens_are_generated`
-— it scans only `[0-9]*.md`, so sidecars may show literal `{{TOKEN}}` examples.
+`src/octopussy/manuscript_variables.py::generate_variables()` as tokens, never
+hand-authored in prose. Add the token to that function *and* reference it from
+a numbered section in the same change. Four tests in
+`tests/test_manuscript_variables.py` enforce the contract, and all four scan
+only `[0-9][0-9]_*.md`, so sidecars such as this file may show literal
+placeholder examples:
+
+| Test | Enforces |
+|---|---|
+| `test_live_token_cross_reference` | No section uses a token the generator does not emit. |
+| `test_generated_tokens_are_all_consumed_or_infrastructural` | No generated token goes unreferenced (dead tokens are unreviewed tokens). |
+| `test_no_bare_metric_numerals_in_results_prose` | Abstract, results, and conclusion contain no bare numeral outside a code span or a resolved token. |
+| `test_bibliography_and_citations_agree` | Every cited key exists in `references.bib`, and every entry is cited. |
+
+Never add a bibliography entry whose details you have not confirmed against a
+primary source. An uncheckable citation is worse than a missing one — delete
+rather than reshape.
 
 ## Figures
 

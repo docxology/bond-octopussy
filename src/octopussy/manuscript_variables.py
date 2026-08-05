@@ -24,9 +24,14 @@ import yaml
 from octopussy import concealment_sweep as sweep
 from octopussy import cover_logistics as logistics
 from octopussy import forgery_detection as forge
-from octopussy.mission import CODENAME, SEED, run_faberge
+from octopussy.mission import CODENAME, PIPELINE_COUNT, SEED, SWEEP_DETECTORS, SWEEP_GRID, run_faberge
 
-__all__ = ["generate_variables", "load_manuscript_config", "resolve_manuscript_tree"]
+__all__ = [
+    "borderline_anachronism",
+    "generate_variables",
+    "load_manuscript_config",
+    "resolve_manuscript_tree",
+]
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG_PATH = PACKAGE_ROOT / "manuscript" / "config.yaml"
@@ -46,6 +51,54 @@ def load_manuscript_config(config_path: str | Path | None = None) -> dict[str, A
     if not isinstance(data, dict):
         raise ValueError(f"manuscript config must be a top-level mapping, got {type(data).__name__}")
     return data
+
+
+def borderline_anachronism(
+    exhibit: tuple[forge.Artifact, ...] | None = None,
+    library: dict[str, forge.Pigment] | None = None,
+) -> tuple[str, int, int, float]:
+    """Identify the exhibit's *hardest* forgery: the least-modern fake.
+
+    A fake built entirely from modern material is trivially caught — any
+    channel would flag it. The discriminating case is the one that is mostly
+    period-correct, where only a minority of the mixture betrays it. So the
+    selection criterion is the **smallest anachronistic weight fraction** among
+    artifacts that have any anachronism at all; ties break toward the smaller
+    introduction gap.
+
+    Returns ``(artifact_name, claimed_year, min_gap_years,
+    anachronistic_weight_fraction)`` where ``min_gap_years`` is how far the
+    earliest offending pigment post-dates the claimed year, and the fraction is
+    of the mixture's total weight. The results section quotes these from the
+    exhibit rather than from memory.
+
+    Raises :class:`ValueError` when the exhibit contains no anachronism at all
+    — a silent "no borderline case" would let the results prose describe an
+    artifact that is not there.
+    """
+    artifacts = forge.DEFAULT_EXHIBIT if exhibit is None else exhibit
+    pigments = forge.PIGMENT_LIBRARY if library is None else library
+    best: tuple[str, int, int, float] | None = None
+    for artifact in artifacts:
+        total = sum(weight for _, weight in artifact.mixture)
+        if total <= 0.0:
+            continue
+        modern = 0.0
+        min_gap: int | None = None
+        for name, weight in artifact.mixture:
+            gap = pigments[name].introduced - artifact.claimed_year
+            if gap <= 0:
+                continue
+            modern += weight
+            min_gap = gap if min_gap is None else min(min_gap, gap)
+        if min_gap is None:
+            continue
+        candidate = (artifact.name, artifact.claimed_year, min_gap, modern / total)
+        if best is None or (candidate[3], candidate[2]) < (best[3], best[2]):
+            best = candidate
+    if best is None:
+        raise ValueError("exhibit contains no anachronistic pigment; the borderline case token has no referent")
+    return best
 
 
 def generate_variables(
@@ -68,6 +121,8 @@ def generate_variables(
     rolling_out = cast("dict[str, object]", outcomes["rolling_stock"])
     source_out = cast("dict[str, object]", outcomes["source_locator"])
 
+    borderline_name, borderline_year, borderline_gap, borderline_modern = borderline_anachronism()
+
     stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
     return {
         "FABERGE_IDENTITY": IDENTITY,
@@ -76,14 +131,31 @@ def generate_variables(
         "FABERGE_TITLE": str(paper.get("title", "")),
         "FABERGE_SUBTITLE": str(paper.get("subtitle", "")),
         "FABERGE_SEED": str(SEED),
+        "FABERGE_NUM_PIPELINES": str(PIPELINE_COUNT),
         "FABERGE_NUM_PIGMENTS": str(forge.PIGMENT_COUNT),
         "FABERGE_NUM_ARTIFACTS": str(forge.ARTIFACT_COUNT),
+        "FABERGE_NUM_BANDS": str(forge.BAND_COUNT),
+        "FABERGE_BAND_MIN_NM": f"{forge.BAND_MIN_NM:.0f}",
+        "FABERGE_BAND_MAX_NM": f"{forge.BAND_MAX_NM:.0f}",
         "FABERGE_NUM_SEGMENTS": str(logistics.SEGMENT_COUNT),
-        "FABERGE_NUM_DETECTORS": str(int(_grid_detectors())),
+        "FABERGE_NUM_STATIONS": str(len(logistics.RailNetwork().nodes)),
+        "FABERGE_NUM_DETECTORS": str(SWEEP_DETECTORS),
+        "FABERGE_GRID_NX": str(SWEEP_GRID.nx),
+        "FABERGE_GRID_NY": str(SWEEP_GRID.ny),
         "FABERGE_NUM_CONTAINERS": str(len(sweep.DEFAULT_CONTAINERS)),
+        "FABERGE_NUM_CATEGORIES": str(sweep.CATALOG_SIZE),
+        "FABERGE_SCREENED_ARTIFACTS": str(forgery["screened"]),
         "FABERGE_FLAGGED_FORGERY": str(forgery["flagged"]),
         "FABERGE_FORGERY_WORST": str(forgery["worst"]),
+        "FABERGE_BORDERLINE_ARTIFACT": borderline_name,
+        "FABERGE_BORDERLINE_YEAR": str(borderline_year),
+        "FABERGE_BORDERLINE_GAP_YEARS": str(borderline_gap),
+        "FABERGE_BORDERLINE_MODERN_PCT": f"{100.0 * borderline_modern:.0f}",
+        "FABERGE_LOGISTICS_UNITS": str(logistics_out["payload_units"]),
+        "FABERGE_LOGISTICS_COST": str(logistics_out["total_cost"]),
         "FABERGE_LOGISTICS_MAKESPAN": str(logistics_out["makespan"]),
+        "FABERGE_LOGISTICS_DEADLINE": str(logistics_out["deadline"]),
+        "FABERGE_LOGISTICS_SLACK": str(logistics_out["slack"]),
         "FABERGE_LOGISTICS_TRAINS": str(logistics_out["trains_needed"]),
         "FABERGE_SWEEP_FLAGGED": ", ".join(str(x) for x in cast("list[object]", concealment["flagged"])),
         "FABERGE_SWEEP_WORST": str(concealment["worst"] if concealment["worst"] else "none"),
@@ -92,6 +164,7 @@ def generate_variables(
         "FABERGE_VARNISH_GENUINE_VERDICT": str(varnish_out["genuine_verdict"]),
         "FABERGE_VARNISH_FAKE_AGE": str(varnish_out["fake_estimated_age"]),
         "FABERGE_VARNISH_FAKE_VERDICT": str(varnish_out["fake_verdict"]),
+        "FABERGE_VARNISH_FAKE_CLOSENESS": str(varnish_out["fake_closeness"]),
         "FABERGE_VARNISH_CLAIMED": str(varnish_out["claimed_year"]),
         # Rolling stock (logistics depth).
         "FABERGE_ROLLING_TRIPS": str(rolling_out["trips"]),
@@ -101,17 +174,15 @@ def generate_variables(
         "FABERGE_ROLLING_DEPOT_COST": str(rolling_out["depot_assignment_cost"]),
         # Source localization (sweep depth).
         "FABERGE_SOURCE_ERROR_M": str(source_out["error_m"]),
+        "FABERGE_SOURCE_STD_M": str(source_out["position_std_m"]),
         "FABERGE_SOURCE_INTENSITY": str(source_out["intensity"]),
+        "FABERGE_SOURCE_TRUE_INTENSITY": f"{float(cast('float', source_out['true_intensity'])):.0f}",
         "FABERGE_SOURCE_RESIDUAL": str(source_out["residual"]),
+        "FABERGE_SOURCE_ITERATIONS": str(source_out["iterations"]),
         "FABERGE_SOURCE_CONVERGED": str(source_out["converged"]),
         "PYTHON_VERSION": platform.python_version(),
         "GENERATION_TIMESTAMP": stamp,
     }
-
-
-def _grid_detectors() -> int:
-    """Number of detectors in the mission's concealment sweep grid."""
-    return 100
 
 
 def resolve_manuscript_tree(

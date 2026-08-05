@@ -145,3 +145,40 @@ def test_mission_uses_no_infrastructure_imports():
         assert "from infrastructure" not in text
         assert "import bond_api" not in text
         assert "from bond_api" not in text
+
+
+def test_pipeline_registry_matches_run_faberge_keys():
+    """PIPELINES is the contract; result keys must equal it exactly."""
+    from octopussy.mission import PIPELINES, PIPELINE_COUNT
+
+    results = run_faberge(SEED)
+    assert tuple(results) == PIPELINES
+    assert PIPELINE_COUNT == len(PIPELINES) == 6
+
+
+def test_sweep_constants_are_derived_not_restated():
+    from octopussy.mission import SWEEP_DETECTORS, SWEEP_GRID
+
+    assert SWEEP_DETECTORS == SWEEP_GRID.nx * SWEEP_GRID.ny
+    brief = MissionProvider().brief()
+    sweep_asset = next(a for a in brief.assets if a.name == "sweep")
+    assert sweep_asset.payload["detectors"] == SWEEP_DETECTORS
+
+
+def test_source_block_reports_uncertainty_alongside_error():
+    """A position fix without an uncertainty is an unfalsifiable claim."""
+    source = run_faberge(SEED)["source_locator"]
+    assert source["position_std_m"] > 0.0
+    assert source["error_m"] >= 0.0
+    assert source["iterations"] >= 1
+
+
+def test_debrief_lessons_cover_every_pipeline_family():
+    from octopussy.mission import PIPELINES
+
+    provider = MissionProvider()
+    debrief = provider.debrief(provider.execute(provider.plan(provider.brief())))
+    joined = " ".join(debrief.lessons).lower()
+    for keyword in ("pigment", "varnish", "min-cost flow", "matching", "sweep", "gauss-newton"):
+        assert keyword in joined, f"debrief never mentions {keyword}"
+    assert len(debrief.lessons) >= len(PIPELINES)

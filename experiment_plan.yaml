@@ -1,30 +1,65 @@
 # Experiment plan — Octopussy: FABERGÉ
-# Declares the deterministic conditions, metric, and expectations.
+# Declares the deterministic conditions, metrics, and expectations for all six
+# pipelines. Values mirror the scenario constants in src/octopussy/mission.py;
+# that module is authoritative, this file is the readable declaration.
 
 mission:
   codename: "FABERGÉ"
   seed: 7
+  pipelines:
+    - "forgery"
+    - "logistics"
+    - "concealment"
+    - "varnish"
+    - "rolling_stock"
+    - "source_locator"
 
 conditions:
   forgery_exhibit:
     artifacts: 4
     pigments: 14
+    bands: 24
     wavelengths_nm: [320, 760]
     noise_std: 0.02
+  varnish_ageing:
+    claimed_year: 1910
+    current_year: 2026
+    fake_surface_age_years: 3.0
+    tau_years: 40.0
+    measurement_noise_std: 0.02
   logistics_corridor:
     source: "dover"
     sink: "monastery"
+    segments: 9
     payload_units: 3
     deadline_min: 400
     train_capacity: 2
+  rolling_stock:
+    trips: 7
+    turnaround_min: 20
+    depot_cost_matrix: [[10, 25, 15], [20, 12, 30], [18, 22, 16]]
   concealment_sweep:
     grid: [10, 10]
     spacing_m: 2.0
+    standoff_m: 1.0
     background_cps: 40.0
+    source_position_m: [7.0, 7.0]
     source_intensity: 800.0
     hotspot_threshold_z: 3.0
+    containers: 4
+    density_categories: 6
+  source_locator:
+    solver: "damped Gauss-Newton, numerical Jacobian, step-halving line search"
+    start: "excess-weighted centroid (data-derived, seed-free)"
+    tolerance: 1.0e-6
+    max_iterations: 50
 
 primary_metric: "fused mission verdicts (forgery flag, transfer feasibility, sweep flagged items)"
+
+secondary_metrics:
+  - "varnish age estimate vs. claimed provenance (years, verdict)"
+  - "minimum trainsets vs. scheduled trips (min path cover)"
+  - "source localization error (m) against the fit's own positional sigma (m)"
 
 expected_figures:
   - "forgery_fingerprints.png"
@@ -35,8 +70,21 @@ expected_tables:
   - "mission_outcome.json"
 
 baseline:
-  - "genuine artifacts remain classified genuine (no false positives)"
+  - "genuine artifacts remain classified genuine (no false positives on the exhibit)"
   - "an all-modern composition is flagged as forged or likely-forged"
+  - "the tightest anachronism in the exhibit is still flagged"
+  - "a freshly varnished surface is rejected as too_young for its claimed era"
+  - "the localized source position lies within a few metres of truth"
 
 ablation:
-  - "separating the three channels independently exercises each domain module"
+  - "each pipeline is independently exercised by its own test module"
+  - "each discipline is answered twice; agreement between the headline and depth
+     module is the evidence, disagreement is itself a finding"
+
+known_limitations:
+  # Tracked in TODO.md; stated in manuscript/07_scope_and_related_work.md.
+  - "no genuine period piece sits near the anachronism boundary, so the
+     false-positive rate of that channel is untested"
+  - "detection thresholds were calibrated on the same exhibit that evaluates them"
+  - "varnish kinetics assume a single time constant for all resins"
+  - "the sweep model has no attenuation, scattering, or energy resolution"

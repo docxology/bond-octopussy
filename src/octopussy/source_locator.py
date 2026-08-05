@@ -32,10 +32,12 @@ Pure domain logic (stdlib + numpy), deterministic, no ``infrastructure`` or
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
 import numpy as np
 
 __all__ = [
+    "DetectorLattice",
     "SourceEstimate",
     "excess_counts",
     "gauss_newton_source",
@@ -51,6 +53,31 @@ _JACOBIAN_EPS = 1e-4
 _DAMPING = 1e-6
 #: Line-search halving steps per Gauss–Newton iteration.
 _MAX_LINE_SEARCH = 20
+
+
+@runtime_checkable
+class DetectorLattice(Protocol):
+    """Structural contract for anything that lays out detectors in a plane.
+
+    :class:`octopussy.concealment_sweep.SweepGrid` satisfies it. Declaring the
+    shape structurally keeps :mod:`source_locator` decoupled from the sweep
+    module (no import, no cycle) while still being statically checkable — the
+    previous ``grid: object`` signature needed ``type: ignore`` on every
+    attribute access.
+
+    ``standoff`` is declared read-only (a property, not a bare annotation) so
+    that frozen dataclasses such as ``SweepGrid`` satisfy it — a settable
+    protocol variable would reject every immutable implementation.
+    """
+
+    @property
+    def standoff(self) -> float:
+        """Detector elevation above the source plane (m)."""
+        ...  # pragma: no cover — typing marker, never executed
+
+    def detector_positions(self) -> np.ndarray:
+        """Return an ``(n, 2)`` array of detector ``(x, y)`` positions."""
+        ...  # pragma: no cover — typing marker, never executed
 
 
 @dataclass(frozen=True)
@@ -246,21 +273,23 @@ def localization_uncertainty(
 
 
 def locate_from_sweep(
-    grid: object,
+    grid: DetectorLattice,
     counts: np.ndarray,
     background: np.ndarray,
     *,
     max_iterations: int = 50,
     tolerance: float = 1e-6,
 ) -> SourceEstimate:
-    """Convenience wrapper: localize a source on a :class:`SweepGrid` lattice.
+    """Convenience wrapper: localize a source on a detector lattice.
 
-    Accepts any object exposing ``detector_positions()`` and ``standoff``
-    (e.g. :class:`octopussy.concealment_sweep.SweepGrid`).
+    Accepts any :class:`DetectorLattice` — anything exposing
+    ``detector_positions()`` and ``standoff``, e.g.
+    :class:`octopussy.concealment_sweep.SweepGrid`. The per-detector
+    ``background`` map is reduced to its mean, matching the flat-background
+    forward model in :func:`model_counts`.
     """
-    raw: np.ndarray = np.asarray(grid.detector_positions())  # type: ignore[attr-defined]
-    positions: np.ndarray = raw.astype(np.float64)
-    standoff = float(grid.standoff)  # type: ignore[attr-defined]
+    positions: np.ndarray = np.asarray(grid.detector_positions()).astype(np.float64)
+    standoff = float(grid.standoff)
     return gauss_newton_source(
         positions,
         np.asarray(counts, dtype=float).ravel(),

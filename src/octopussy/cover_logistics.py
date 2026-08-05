@@ -65,11 +65,15 @@ def _clean(node: str) -> str:
 
 
 def _build_default_segments() -> tuple[Edge, ...]:
-    """The FABERGÉ default circus rail corridor (9 segments, 6 stations).
+    """The FABERGÉ default circus rail corridor.
 
     The circus train runs east from the Channel fringe through the inland
     garrison to the target station, with a slow scenic branch to the circus
     yard — a decoy that costs more but offers extra capacity for large shows.
+
+    Deliberately no size stated here: :data:`SEGMENT_COUNT` and
+    ``RailNetwork().nodes`` are the authority, and a docstring that restated
+    them was wrong (it claimed 6 stations; the corridor has 8).
     """
     return (
         Edge("dover", "calais", 40, 4, "ferry"),
@@ -202,17 +206,28 @@ def _augmenting_path(
             cap = flows.get(-(move + 1), 0)
         if bottleneck is None or cap < bottleneck:
             bottleneck = cap
-    return moves, bottleneck if bottleneck is not None else 0
+    if bottleneck is None or bottleneck <= 0:
+        # An empty or zero-capacity path would push zero units forever. Report
+        # "no residual path" instead so the caller's loop always terminates.
+        return None
+    return moves, bottleneck
 
 
 @dataclass
 class FlowResult:
-    """The outcome of a min-cost-flow computation."""
+    """The outcome of a *successful* min-cost-flow computation.
+
+    There is deliberately no ``feasible`` flag: :func:`min_cost_flow` either
+    returns a result that routed the full demand or raises
+    :class:`LogisticsInfeasibleError`. A boolean that is true in every
+    constructed instance would be an assertion that can never fail; callers
+    that want a non-raising answer use :func:`plan_transfer`, whose
+    ``TransferPlan.feasible`` genuinely varies.
+    """
 
     flow_per_edge: dict[int, int]  # edge index -> units moved
     total_cost: int
     total_flow: int
-    feasible: bool  # True when the full demand was routed
 
 
 def min_cost_flow(
@@ -223,18 +238,25 @@ def min_cost_flow(
 ) -> FlowResult:
     """Move exactly ``demand`` units from ``source`` to ``sink`` at minimum cost.
 
-    Returns a :class:`FlowResult`. When the network cannot carry the full
-    demand it raises :class:`LogisticsInfeasibleError` after routing as much
-    as possible. Successive shortest paths (Bellman-Ford augmenting paths);
+    Returns a :class:`FlowResult` whose ``total_flow`` equals ``demand``. When
+    the network cannot carry the full demand, raises
+    :class:`LogisticsInfeasibleError` reporting how many units *were*
+    routable. Successive shortest paths (Bellman-Ford augmenting paths);
     deterministic and integer-exact.
+
+    ``source`` and ``sink`` must be distinct: a self-transfer has no augmenting
+    path to push flow along and is rejected as a caller error (:class:`ValueError`)
+    rather than silently looping.
     """
     if demand < 0:
         raise ValueError("demand must be non-negative")
     source, sink = _clean(source), _clean(sink)
     if source not in network._nodes or sink not in network._nodes:
         raise ValueError("source and sink must be stations in the network")
+    if source == sink:
+        raise ValueError("source and sink must be distinct stations")
     if demand == 0:
-        return FlowResult({}, 0, 0, True)
+        return FlowResult({}, 0, 0)
 
     flows: dict[int, int] = {}
     total_cost = 0
@@ -256,7 +278,7 @@ def min_cost_flow(
                 flows[index] = flows.get(index, 0) - push
         total_flow += push
 
-    return FlowResult(flows, total_cost, total_flow, True)
+    return FlowResult(flows, total_cost, total_flow)
 
 
 @dataclass(frozen=True)
@@ -316,9 +338,17 @@ def plan_transfer(
     Builds the transfer manifest: the min-cost flow, the per-unit makespan,
     the deadline slack, and the number of circus trains required to carry the
     payload at the given wagon capacity.
+
+    This is the *non-raising* entry point. A network that cannot carry the
+    payload is a legitimate mission answer, not an error, so
+    :class:`LogisticsInfeasibleError` is caught and reported as a plan with
+    ``feasible=False``, zero cost, no routed edges, and ``slack=-deadline``
+    (the whole window is missed). Caller errors — an unknown station, a
+    negative payload, a self-transfer — still raise :class:`ValueError`: only
+    the infeasibility signal is absorbed here.
     """
     try:
-        flow = min_cost_flow(network, source, sink, payload_units)
+        flow: FlowResult | None = min_cost_flow(network, source, sink, payload_units)
     except LogisticsInfeasibleError:
         flow = None
     if flow is None:
