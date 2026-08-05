@@ -25,3 +25,20 @@ fuses a radiation anomaly map with shape/mass anomaly screening of
 {{FABERGE_NUM_CONTAINERS}} cargo containers, flagging
 {{FABERGE_SWEEP_FLAGGED}}. Every pipeline is fully deterministic under a fixed
 seed ({{FABERGE_SEED}}), producing reproducible, audit-ready provenance.
+
+Each discipline is deepened by a dedicated algorithm module. Forgery
+detection is reinforced by **varnish-ageing kinetics**: the exhibit's surface
+measures ~{{FABERGE_VARNISH_GENUINE_AGE}} years ({{FABERGE_VARNISH_GENUINE_VERDICT}}
+with the claimed {{FABERGE_VARNISH_CLAIMED}} provenance), while the freshly
+varnished duplicate dates to just ~{{FABERGE_VARNISH_FAKE_AGE}} years and is
+rejected as {{FABERGE_VARNISH_FAKE_VERDICT}}. Cover logistics gains
+**rolling-stock circulation**: {{FABERGE_ROLLING_TRIPS}} circus trips are
+covered by a minimum of {{FABERGE_ROLLING_TRAINSETS}} trainsets (a matching of
+{{FABERGE_ROLLING_MATCHING}} successor links, {{FABERGE_ROLLING_DEADHEAD}}
+deadhead minutes), with a depot allocation costing
+{{FABERGE_ROLLING_DEPOT_COST}} minutes. The sweep gains **radiation source
+localization**: weighted Gauss–Newton estimation recovers the concealed source
+to within {{FABERGE_SOURCE_ERROR_M}} metres
+(residual {{FABERGE_SOURCE_RESIDUAL}}, converged:
+{{FABERGE_SOURCE_CONVERGED}}).
+

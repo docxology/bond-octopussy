@@ -7,8 +7,11 @@ mission_codename: "FABERGÉ"
 
 concepts:
   - "artifact forgery detection (spectral/UV fingerprinting)"
+  - "varnish ageing kinetics (surface dating, forgery signal)"
   - "circus-cover smuggling logistics (min-cost flow)"
+  - "rolling-stock circulation (trainset matching/assignment)"
   - "concealed nuclear device detection sweep (radiation, shape/mass anomaly)"
+  - "radiation source localization (weighted Gauss-Newton)"
 
 review_gates:
   - "pytest --cov=src --cov-fail-under=90"

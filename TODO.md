@@ -25,6 +25,31 @@ Forward-only backlog for the FABERGÉ film package (BOND suite, phase 2).
   manuscript tokens; subprocess CLI smoke tests. Live count + coverage →
   `docs/_generated/COUNTS.md`.
 
+## Deepened (phase 4 — FABERGÉ deep improvement)
+
+- **Three new pure domain modules**:
+  - `varnish_ageing.py` — Beer–Lambert varnish yellowing kinetics
+    (`d(t)=d_max(1−e^{−t/τ})`), bounded golden-section age inversion, claimed-era
+    verdict (consistent / too_young / too_old).
+  - `rolling_stock.py` — trainset circulation: Hopcroft–Karp max bipartite
+    matching → minimum trainsets (min path cover), itinerary chain
+    decomposition, and Kuhn–Munkres minimum-cost assignment for depot
+    allocation.
+  - `source_locator.py` — weighted Gauss–Newton nonlinear least squares
+    localization (numerical Jacobian, damped normal equations, excess-centroid
+    start, deterministic line search) + approximate uncertainty.
+- **Deepened mission internals**: `run_faberge` now drives **six** pipelines
+  (forgery, logistics, concealment, varnish, rolling_stock, source_locator);
+  plan() carries six steps; three new gadgets registered + a `register_gadgets`
+  hook added. Protocol surface (`MissionProvider` brief/recon/plan/execute/
+  debrief, `gadget_registry`) unchanged.
+- **Manuscript**: methodology/results/conclusion extended with the deepened
+  outputs via ~16 new live `{{TOKEN}}`s; references.bib extended with real
+  sources (Feller 1994, Horie 2010, Ahuja–Magnanti–Orlin 1993, Caprara et al.
+  2002, Hopcroft–Karp 1973, Kuhn 1955, Nocedal & Wright 2006).
+- **Tests**: +3 files (test_varnish_ageing, test_rolling_stock,
+  test_source_locator), 119 total, no mocks, 0 failures, 0 skipped.
+
 ## Declared integration points
 
 - **BOND-API**: consumed via local path dependency (`[tool.uv.sources]`) —

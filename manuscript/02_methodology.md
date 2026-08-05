@@ -49,3 +49,37 @@ threshold are reported as hotspots. In parallel, each cargo container's mass is
 judged against its category's expected density; a container far heavier than
 its volume allows carries a mass anomaly. A fused report ranks both channels
 into one prioritized suspicion list.
+
+## Varnish-ageing kinetics (forgery depth)
+
+Natural resin varnishes yellow over time. The module models this with a
+saturating exponential law: the absorbing layer grows as
+``d(t) = d_max·(1 − exp(−t/τ))`` and the film's transmittance follows
+Beer–Lambert, ``T(λ, t) = exp(−α(λ)·d(t))``, with a blue-peaked absorption
+spectrum ``α(λ)``. The inverse problem — *given a measured transmittance, how
+old is the varnish?* — is solved by a bounded golden-section least-squares fit
+over the age axis (derivative-free, deterministic). An object whose varnish
+is far younger than its claimed provenance is a repaint or re-varnish, a
+standalone forgery signal.
+
+## Rolling-stock circulation (logistics depth)
+
+Beyond routing the payload, the mission must know how many circus trainsets
+the schedule truly needs. Treating each trip as a node with a directed edge
+``i → j`` when a trainset can work ``j`` after ``i`` (same intermediate
+station, ``depart_j ≥ arrive_i + turnaround``), the minimum number of
+trainsets equals ``n − M`` where ``M`` is the maximum bipartite matching
+(minimum path cover theorem) — computed deterministically with Hopcroft–Karp.
+The matching is decomposed into concrete trainset itineraries, and a
+Kuhn–Munkres minimum-cost assignment resolves depot allocation with the
+minimum total deadhead.
+
+## Radiation source localization (sweep depth)
+
+Given the detector lattice and a Poisson background estimate, the concealed
+emitter is located by weighted nonlinear least squares. With forward model
+``μ_i = B + I/((x_i−x)² + (y_i−y)² + h²)`` and weights
+``w_i = 1/√max(c_i, 1)``, Gauss–Newton iteration with damped normal equations
+and a deterministic line search minimizes the weighted residual; an
+excess-weighted-centroid start keeps the solver seed-free. The inverse normal
+matrix yields an approximate positional and intensity uncertainty.

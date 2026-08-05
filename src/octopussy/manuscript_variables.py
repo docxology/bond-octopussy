@@ -64,6 +64,9 @@ def generate_variables(
     forgery = cast("dict[str, object]", outcomes["forgery"])
     logistics_out = cast("dict[str, object]", outcomes["logistics"])
     concealment = cast("dict[str, object]", outcomes["concealment"])
+    varnish_out = cast("dict[str, object]", outcomes["varnish"])
+    rolling_out = cast("dict[str, object]", outcomes["rolling_stock"])
+    source_out = cast("dict[str, object]", outcomes["source_locator"])
 
     stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
     return {
@@ -84,6 +87,23 @@ def generate_variables(
         "FABERGE_LOGISTICS_TRAINS": str(logistics_out["trains_needed"]),
         "FABERGE_SWEEP_FLAGGED": ", ".join(str(x) for x in cast("list[object]", concealment["flagged"])),
         "FABERGE_SWEEP_WORST": str(concealment["worst"] if concealment["worst"] else "none"),
+        # Varnish ageing (forgery depth).
+        "FABERGE_VARNISH_GENUINE_AGE": str(varnish_out["genuine_estimated_age"]),
+        "FABERGE_VARNISH_GENUINE_VERDICT": str(varnish_out["genuine_verdict"]),
+        "FABERGE_VARNISH_FAKE_AGE": str(varnish_out["fake_estimated_age"]),
+        "FABERGE_VARNISH_FAKE_VERDICT": str(varnish_out["fake_verdict"]),
+        "FABERGE_VARNISH_CLAIMED": str(varnish_out["claimed_year"]),
+        # Rolling stock (logistics depth).
+        "FABERGE_ROLLING_TRIPS": str(rolling_out["trips"]),
+        "FABERGE_ROLLING_MATCHING": str(rolling_out["matching_edges"]),
+        "FABERGE_ROLLING_TRAINSETS": str(rolling_out["trainsets"]),
+        "FABERGE_ROLLING_DEADHEAD": str(rolling_out["deadhead_minutes"]),
+        "FABERGE_ROLLING_DEPOT_COST": str(rolling_out["depot_assignment_cost"]),
+        # Source localization (sweep depth).
+        "FABERGE_SOURCE_ERROR_M": str(source_out["error_m"]),
+        "FABERGE_SOURCE_INTENSITY": str(source_out["intensity"]),
+        "FABERGE_SOURCE_RESIDUAL": str(source_out["residual"]),
+        "FABERGE_SOURCE_CONVERGED": str(source_out["converged"]),
         "PYTHON_VERSION": platform.python_version(),
         "GENERATION_TIMESTAMP": stamp,
     }

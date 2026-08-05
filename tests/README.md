@@ -7,8 +7,11 @@ thin CLIs.
 | File | Coverage |
 |---|---|
 | `test_forgery_detection.py` | Pigments, mixing, UV, NNLS unmixing, screening, level calibration. |
+| `test_varnish_ageing.py` | Yellowing kinetics, age inversion, era verdicts. |
 | `test_cover_logistics.py` | Network validation, min-cost flow, transfer planning, packing. |
+| `test_rolling_stock.py` | Trip validation, Hopcroft–Karp matching, chains, Hungarian assignment. |
 | `test_concealment_sweep.py` | Sweep simulation, background/anomaly, hotspots, mass anomaly, fusion. |
+| `test_source_locator.py` | Gauss–Newton localization, uncertainty, sweep wrapper. |
 | `test_mission.py` | Protocol conformance, discovery, gadgets, determinism. |
 | `test_manuscript_variables.py` | Token hydration + live cross-reference gate. |
 | `test_figures.py` | Deterministic PNG generation. |

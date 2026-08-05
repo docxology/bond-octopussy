@@ -47,7 +47,14 @@ def test_mission_execute_writes_artifacts():
     assert outcome_file.is_file()
     payload = json.loads(outcome_file.read_text(encoding="utf-8"))
     assert payload["success"] is True
-    assert set(payload["results"]) == {"forgery", "logistics", "concealment"}
+    assert set(payload["results"]) == {
+        "forgery",
+        "logistics",
+        "concealment",
+        "varnish",
+        "rolling_stock",
+        "source_locator",
+    }
     assert payload["provenance"]["seed"] == 7
     assert (PROJECT_ROOT / "output" / "figures" / "forgery_fingerprints.png").is_file()
 

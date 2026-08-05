@@ -35,3 +35,30 @@ dense concealed core. Figure @fig:sweep renders the radiation count map with
 the detected hotspot.
 
 ![Concealed-device sweep: radiation count rates with the detected hotspot.](figures/sweep_heatmap.png){#fig:sweep}
+
+## Varnish ageing (forgery depth)
+
+Dating the exhibit's varnish by yellowing kinetics, the genuine surface
+measures about {{FABERGE_VARNISH_GENUINE_AGE}} years — {{FABERGE_VARNISH_GENUINE_VERDICT}}
+with the claimed {{FABERGE_VARNISH_CLAIMED}} provenance. The freshly varnished
+duplicate dates to just ~{{FABERGE_VARNISH_FAKE_AGE}} years and is rejected as
+**{{FABERGE_VARNISH_FAKE_VERDICT}}**: its surface is decades younger than it
+claims to be, independently confirming the forgery screen.
+
+## Rolling-stock circulation (logistics depth)
+
+The schedule of {{FABERGE_ROLLING_TRIPS}} circus trips requires only
+{{FABERGE_ROLLING_TRAINSETS}} trainsets: a maximum successor matching of
+{{FABERGE_ROLLING_MATCHING}} links (minimum path cover) resolves the itineraries
+with {{FABERGE_ROLLING_DEADHEAD}} total deadhead minutes. The Kuhn–Munkres depot
+allocation reaches a minimum total of {{FABERGE_ROLLING_DEPOT_COST}} minutes,
+confirming lower bound and assignment agree for this instance.
+
+## Source localization (sweep depth)
+
+Weighted Gauss–Newton localization on the same sweep recovers the concealed
+source to within **{{FABERGE_SOURCE_ERROR_M}} m** of its true position, with a
+weighted residual of {{FABERGE_SOURCE_RESIDUAL}} and converged:
+{{FABERGE_SOURCE_CONVERGED}}. The fused sweep therefore both flags the device and
+fixes where it sits.
+

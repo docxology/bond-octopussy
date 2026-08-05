@@ -51,16 +51,22 @@ def test_provider_methods_return_protocol_types():
 
 def test_run_faberge_structure():
     results = run_faberge(SEED)
-    assert {"forgery", "logistics", "concealment"} == set(results)
+    assert {"forgery", "logistics", "concealment", "varnish", "rolling_stock", "source_locator"} == set(results)
     assert results["forgery"]["screened"] == 4
     assert results["logistics"]["feasible"] is True
     assert results["concealment"]["flagged"]
+    assert results["varnish"]["fake_verdict"] == "too_young"
+    assert results["rolling_stock"]["trainsets"] == 2
+    assert results["source_locator"]["converged"] is True
 
 
 def test_run_faberge_deterministic():
     a = run_faberge(9)
     b = run_faberge(9)
     assert a["concealment"]["hotspots"] == b["concealment"]["hotspots"]
+    assert a["varnish"]["genuine_estimated_age"] == b["varnish"]["genuine_estimated_age"]
+    assert a["rolling_stock"]["chains"] == b["rolling_stock"]["chains"]
+    assert a["source_locator"]["estimated_position"] == b["source_locator"]["estimated_position"]
 
 
 def test_input_hash_stable():
@@ -81,8 +87,28 @@ def test_input_hash_changes_with_objectives():
 
 def test_gadgets_registered():
     assert isinstance(gadget_registry, GadgetRegistry)
-    assert gadget_registry.gadgets_for("octopussy") == ("forge_screen", "route_cargo", "sweep_concealment")
+    assert gadget_registry.gadgets_for("octopussy") == (
+        "forge_screen",
+        "route_cargo",
+        "sweep_concealment",
+        "varnish_age",
+        "circulate_fleet",
+        "locate_source",
+    )
     assert gadget_registry.contains("octopussy", "forge_screen")
+    assert gadget_registry.contains("octopussy", "locate_source")
+
+
+def test_register_gadgets_hook():
+    from octopussy.mission import register_gadgets
+
+    fresh = GadgetRegistry()
+    returned = register_gadgets(fresh)
+    assert returned is fresh
+    assert fresh.gadgets_for("octopussy") == gadget_registry.gadgets_for("octopussy")
+    # idempotent — re-registering on the module registry keeps the same set.
+    register_gadgets(gadget_registry)
+    assert len(gadget_registry.gadgets_for("octopussy")) == 6
 
 
 def test_gadget_registry_drop():
@@ -96,10 +122,26 @@ def test_gadget_registry_drop():
 
 
 def test_mission_uses_no_infrastructure_imports():
-    from octopussy import forgery_detection, cover_logistics, concealment_sweep
+    from octopussy import (
+        concealment_sweep,
+        cover_logistics,
+        forgery_detection,
+        rolling_stock,
+        source_locator,
+        varnish_ageing,
+    )
 
-    for module in (forgery_detection, cover_logistics, concealment_sweep):
+    for module in (
+        forgery_detection,
+        cover_logistics,
+        concealment_sweep,
+        varnish_ageing,
+        rolling_stock,
+        source_locator,
+    ):
         source = module.__file__ or ""
         text = open(source, encoding="utf-8").read()
         assert "import infrastructure" not in text
         assert "from infrastructure" not in text
+        assert "import bond_api" not in text
+        assert "from bond_api" not in text
