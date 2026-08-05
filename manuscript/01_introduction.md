@@ -18,8 +18,10 @@ plus full provenance.
 The governing design decision is that no single detector carries a verdict
 alone. Each discipline is implemented twice: a *headline* module that raises
 the alarm, and a *depth* module that reaches the same question through
-unrelated physics or unrelated mathematics. Agreement between the two is the
-evidence; disagreement is itself a finding.
+unrelated physics or unrelated mathematics. Disagreement between the two is a
+finding. Agreement is evidence only in proportion to the depth module's own
+measured uncertainty, which is why the results section reports an error bar
+beside every depth verdict rather than the verdict alone.
 
 | Discipline | Headline module | Depth module |
 |---|---|---|
@@ -34,6 +36,14 @@ restored trips the varnish channel although the pigment channel clears it.
 Likewise, a routing plan that satisfies capacity says nothing about whether
 enough trainsets exist to fly the cover at all, and a sweep that flags a
 container has not yet said where inside the yard the emitter sits.
+
+It matters asymmetrically, though, and that asymmetry is a result rather than a
+caveat. Varnish dating is sharp against a recent film and blunt against an old
+one, because the yellowing kinetics saturate; the rolling-stock matching bounds
+the circus fleet but says nothing about the routed plan until the two are
+explicitly compared. Both facts are measured and reported below. Both pipelines
+also read the *same* synthetic scenario, so what the pairing establishes is
+independence of observable, not independence of sample.
 
 Every module is implemented with real, deterministic algorithms operating on
 data generated from physically-motivated forward models — not stubs and not

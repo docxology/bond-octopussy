@@ -173,6 +173,161 @@ def test_source_block_reports_uncertainty_alongside_error():
     assert source["iterations"] >= 1
 
 
+def test_varnish_pipeline_actually_reads_the_exhibit():
+    """The manuscript says the varnish channel dates *exhibit* artifacts.
+
+    It used to be false: the varnish block synthesized its own transmittance
+    curves from a bare band grid and never touched forge.DEFAULT_EXHIBIT, so
+    the 'same objects, second observable' claim had no code behind it. Bind the
+    claim to the exhibit record, and make it fail if the coupling is cut.
+    """
+    import numpy as np
+
+    from octopussy import forgery_detection as fg
+    from octopussy import varnish_ageing as va
+    from octopussy.mission import _VARNISH_CURRENT, _VARNISH_NOISE, _unvarnished_reference, _varnish_rng
+
+    block = run_faberge(SEED)["varnish"]
+    exhibit = {a.name: a for a in fg.DEFAULT_EXHIBIT}
+    for key in ("genuine_artifact", "fake_artifact"):
+        assert block[key] in exhibit, f"{key} names an artifact outside the exhibit"
+    genuine = exhibit[block["genuine_artifact"]]
+    # The claimed year is read off the exhibit, not restated in mission.py.
+    assert block["claimed_year"] == genuine.claimed_year
+    assert block["genuine_true_age"] == float(block["current_year"] - genuine.claimed_year)
+
+    # The reference spectrum really is that artifact's substrate.
+    substrate = tuple((n, w) for n, w in genuine.mixture if fg.PIGMENT_LIBRARY[n].category != "varnish")
+    assert substrate != genuine.mixture, "fixture precondition: the artifact has a varnish layer to strip"
+    reference = _unvarnished_reference(genuine)
+    np.testing.assert_allclose(reference, fg.mix_spectrum(substrate))
+
+    # Bind the *published number* to that reference: replay the channel's own
+    # generator against the exhibit substrate and require the same age.
+    def _dated(ref):
+        measured = va.measure_varnished_surface(
+            ref, block["genuine_true_age"], rng=_varnish_rng(SEED), noise_std=_VARNISH_NOISE
+        )
+        return round(
+            float(va.date_varnished_surface(measured, ref, genuine.claimed_year, _VARNISH_CURRENT).estimated_age), 1
+        )
+
+    assert _dated(reference) == block["genuine_estimated_age"]
+    # Positive control: the reference is load-bearing. A generic flat substrate
+    # — which is what the pipeline used before it read the exhibit at all —
+    # produces a different age, so the assertion above is not vacuous.
+    flat = np.full(reference.size, 0.6)
+    assert _dated(flat) != block["genuine_estimated_age"]
+
+
+def test_varnish_and_forgery_share_one_band_grid():
+    """The two grids are equal by construction — bind them before they aren't.
+
+    The varnish channel multiplies an exhibit spectrum (on the forgery module's
+    grid) by a transmittance (on the varnish module's grid) band for band, and
+    divides them again to recover the film. If the grids ever diverged, that
+    product would be silently meaningless rather than an error.
+    """
+    import numpy as np
+
+    from octopussy import forgery_detection as fg
+    from octopussy import varnish_ageing as va
+
+    np.testing.assert_array_equal(va.DEFAULT_BANDS, fg.WAVELENGTH_BANDS)
+
+
+def test_varnish_missing_artifact_fails_loudly():
+    from octopussy.mission import _exhibit_artifact
+
+    with pytest.raises(KeyError, match="no surface to date"):
+        _exhibit_artifact("not_in_the_exhibit")
+
+
+def test_unvarnished_reference_rejects_a_varnish_only_artifact():
+    from octopussy import forgery_detection as fg
+    from octopussy.mission import _unvarnished_reference
+
+    with pytest.raises(ValueError, match="no substrate"):
+        _unvarnished_reference(fg.Artifact("bare", 1900, (("shellac_varnish", 1.0),)))
+
+
+def test_varnish_reports_its_own_error_bar_and_the_asymmetry():
+    """A single verdict without an ensemble is an unfalsifiable claim.
+
+    The results section reports the fresh coat as decisively rejected and the
+    century-old surface as undecidable — every verdict reachable from it by
+    measurement noise alone. Those are the two properties that make the honest
+    reading honest, so assert both.
+    """
+    from octopussy import varnish_ageing as va
+
+    block = run_faberge(SEED)["varnish"]
+    trials = block["trials"]
+    assert trials >= 2
+    # Fresh coat: rejected in every realization, with a tight spread.
+    assert block["fake_verdict"] == "too_young"
+    assert block["fake_rejected_trials"] == trials
+    assert block["fake_age_std"] < block["tolerance_years"]
+    # Century-old surface: the spread exceeds the tolerance it is judged by,
+    # and measurement noise alone reaches every verdict the classifier can
+    # emit — which is the claim the results and scope sections now make, so it
+    # must be bound here rather than asserted in prose.
+    assert block["genuine_age_std"] > block["tolerance_years"]
+    assert block["genuine_consistent_trials"] < trials
+    assert block["genuine_age_min"] < block["genuine_age_max"]
+    assert block["genuine_age_max"] - block["genuine_age_min"] > block["tolerance_years"]
+    assert block["genuine_verdicts_seen"] == len(va.AgeVerdict)
+    for level in va.AgeVerdict:
+        assert f"{level.value}×" in block["genuine_verdict_spread"]
+
+
+def test_cover_check_actually_compares_the_two_pipelines():
+    """The conclusion ties the routed plan to the circus fleet — prove it.
+
+    The rolling-stock matching runs over its own trip fixture, so on its own it
+    says nothing about the min-cost flow. These fields are the comparison, and
+    they must be computed from the live logistics output rather than restated.
+    """
+    results = run_faberge(SEED)
+    logistics_out = results["logistics"]
+    rolling_out = results["rolling_stock"]
+    assert rolling_out["trains_needed"] == logistics_out["trains_needed"]
+    assert rolling_out["routed_legs"] == len({(o, d) for o, d, _ in logistics_out["edges_used"]})
+    assert rolling_out["corridor_covered"] is True
+    assert rolling_out["uncovered_legs"] == []
+    assert rolling_out["fleet_sufficient"] is True
+    assert rolling_out["trains_needed"] <= rolling_out["trainsets"]
+
+
+def test_cover_check_goes_false_when_the_schedule_stops_covering_the_route():
+    """Negative control, through the production path.
+
+    A green "corridor_covered: true" proves nothing unless the field can be
+    false, so re-run `run_faberge` itself against a schedule missing the last
+    corridor leg. A hard-wired true would survive the assertions above; it
+    cannot survive this one.
+    """
+    from octopussy.mission import _ROLLING_TRIPS
+
+    crippled = tuple(t for t in _ROLLING_TRIPS if (t.origin, t.destination) != ("garrison", "monastery"))
+    assert len(crippled) < len(_ROLLING_TRIPS), "fixture precondition: that leg is in the schedule"
+
+    rolling_out = run_faberge(SEED, trips=crippled)["rolling_stock"]
+    assert rolling_out["corridor_covered"] is False
+    assert rolling_out["uncovered_legs"] == [["garrison", "monastery"]]
+
+
+def test_fleet_sufficiency_goes_false_when_the_fleet_is_too_small():
+    """The other half of the cover check must also be falsifiable."""
+    from octopussy.mission import _ROLLING_TRIPS
+
+    lone = (_ROLLING_TRIPS[0],)
+    rolling_out = run_faberge(SEED, trips=lone)["rolling_stock"]
+    assert rolling_out["trainsets"] == 1
+    assert rolling_out["trains_needed"] > rolling_out["trainsets"]
+    assert rolling_out["fleet_sufficient"] is False
+
+
 def test_debrief_lessons_cover_every_pipeline_family():
     from octopussy.mission import PIPELINES
 

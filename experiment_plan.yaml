@@ -58,7 +58,11 @@ primary_metric: "fused mission verdicts (forgery flag, transfer feasibility, swe
 
 secondary_metrics:
   - "varnish age estimate vs. claimed provenance (years, verdict)"
+  - "varnish age recovery scatter over repeated noise realizations (years),
+     reported alongside every verdict — a verdict without it is unfalsifiable"
   - "minimum trainsets vs. scheduled trips (min path cover)"
+  - "cross-pipeline cover check: routed legs covered by the schedule, and fleet
+     size vs. the trains the flow needs"
   - "source localization error (m) against the fit's own positional sigma (m)"
 
 expected_figures:
@@ -78,13 +82,23 @@ baseline:
 
 ablation:
   - "each pipeline is independently exercised by its own test module"
-  - "each discipline is answered twice; agreement between the headline and depth
-     module is the evidence, disagreement is itself a finding"
+  - "each discipline is answered twice through a different observable;
+     disagreement is a finding, and agreement is evidence only in proportion to
+     the depth module's measured uncertainty"
+  - "the cross-pipeline cover check is exercised through run_faberge itself with
+     a schedule that does not cover the routed corridor (negative control)"
 
 known_limitations:
   # Tracked in TODO.md; stated in manuscript/07_scope_and_related_work.md.
   - "no genuine period piece sits near the anachronism boundary, so the
      false-positive rate of that channel is untested"
+  - "the least-modern fake in the exhibit is still half modern by weight, so the
+     trace-anachronism regime is not exercised at all"
   - "detection thresholds were calibrated on the same exhibit that evaluates them"
   - "varnish kinetics assume a single time constant for all resins"
+  - "varnish dating cannot confirm an old provenance: past roughly three time
+     constants the kinetics saturate and the recovered age scatters wider than
+     the consistency tolerance, so a 'consistent' verdict is a failure to reject"
+  - "headline and depth modules share the same synthetic scenario and its
+     authored ground truth: independence of observable, not of sample"
   - "the sweep model has no attenuation, scattering, or energy resolution"

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -26,13 +28,63 @@ def test_load_config_non_mapping(tmp_path):
 
 
 def test_generate_variables_shape():
-    variables = mv.generate_variables(now=mv.datetime(2026, 8, 4, 12, 0, tzinfo=mv.timezone.utc))
+    variables = mv.generate_variables()
     assert variables["FABERGE_IDENTITY"] == "Octopussy"
     assert variables["FABERGE_CODENAME"] == "FABERGÉ"
     assert variables["FABERGE_SEED"] == "7"
     assert variables["FABERGE_FLAGGED_FORGERY"].isdigit()
     assert variables["FABERGE_LOGISTICS_TRAINS"].isdigit()
-    assert variables["GENERATION_TIMESTAMP"].startswith("2026-08-04T12:00:00")
+
+
+def test_no_wall_clock_token_is_emitted():
+    """The reproducibility section claims no wall-clock lands in an artifact.
+
+    It used to be false: a GENERATION_TIMESTAMP token was emitted into
+    output/data/manuscript_variables.json and printed as prose in the
+    experimental-setup section, so two runs seconds apart differed. Bind the
+    claim to the emitted set rather than to one token name — any value that
+    parses as a datetime would reintroduce the defect.
+    """
+    iso_datetime = re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}")
+    variables = mv.generate_variables()
+    assert "GENERATION_TIMESTAMP" not in variables
+    stamped = {name: value for name, value in variables.items() if iso_datetime.search(value)}
+    assert stamped == {}, f"wall-clock value(s) emitted into the manuscript variables: {stamped}"
+    # Positive control: the detector does fire on a real timestamp.
+    assert iso_datetime.search(datetime.now(timezone.utc).isoformat(timespec="seconds"))
+
+
+def test_regeneration_is_byte_identical(tmp_path):
+    """Prove the 'regenerating leaves a byte-identical tree' claim.
+
+    Runs the full generation twice into separate trees — manuscript variables,
+    the resolved manuscript sections, and every rendered figure — and compares
+    the bytes. This is the assertion the reproducibility section names; before
+    the timestamp was removed it failed on the variables JSON.
+    """
+    import json
+
+    from octopussy.figures import generate_all
+
+    digests = []
+    for run in ("first", "second"):
+        root = tmp_path / run
+        variables = mv.generate_variables()
+        (root / "data").mkdir(parents=True)
+        (root / "data" / "manuscript_variables.json").write_text(
+            json.dumps(variables, sort_keys=True, indent=2), encoding="utf-8"
+        )
+        mv.resolve_manuscript_tree(variables, output_dir=root / "manuscript")
+        generate_all(root / "figures")
+        digests.append(
+            {
+                str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in sorted(root.rglob("*"))
+                if path.is_file()
+            }
+        )
+    assert digests[0], "the byte-identity check scanned zero files — it would be vacuous"
+    assert digests[0] == digests[1]
 
 
 def test_generate_variables_uses_config_path(tmp_path):
@@ -68,7 +120,7 @@ def test_resolve_manuscript_tree_strict_rejects_unresolved(tmp_path):
 
 def test_live_token_cross_reference():
     """Every {{TOKEN}} in a numbered manuscript section must be generated."""
-    variables = mv.generate_variables(now=mv.datetime(2026, 8, 4, 12, 0, tzinfo=mv.timezone.utc))
+    variables = mv.generate_variables()
     for source in sorted((ROOT / "manuscript").glob("[0-9][0-9]_*.md")):
         text = source.read_text(encoding="utf-8")
         for token in TOKEN_RE.findall(text):

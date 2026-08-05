@@ -54,12 +54,18 @@ injected via `manuscript_variables.py` (never hand-authored), and zero
 ## Key concepts
 
 - **FABERGÉ** answers three investigative questions with **six** pipelines —
-  each question gets a headline detector and an independent confirmer, so a
-  verdict never rests on one method's failure mode. `mission.PIPELINES` is the
+  each question gets a headline detector and a depth module reading a different
+  observable. That is independence of observable, not of sample: all six run on
+  the same synthetic scenario with authored ground truth, so a second module
+  agreeing is not automatically a second confirmation. Any new depth claim must
+  ship with the module's own measured uncertainty. `mission.PIPELINES` is the
   authoritative list; `run_faberge` checks its own result keys against it.
 - **Authenticity**: `forgery_detection` reads pigment chemistry (ridge NNLS
   unmixing + matched-filter anachronism + UV fluorescence); `varnish_ageing`
-  independently dates the surface film by Beer–Lambert yellowing kinetics.
+  dates the surface film of the *same exhibit artifacts* by Beer–Lambert
+  yellowing kinetics. It is a rejection instrument, not a confirmation one —
+  `age_recovery_scatter` measures the spread, which exceeds the consistency
+  tolerance once the kinetics saturate.
 - **Cover**: `cover_logistics` solves min-cost flow over the rail corridor by
   successive shortest paths; `rolling_stock` bounds the trainsets the schedule
   actually needs by maximum bipartite matching (minimum path cover), with

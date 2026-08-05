@@ -13,30 +13,76 @@ period pieces score below the genuine threshold; the all-modern composition
 *{{FABERGE_FORGERY_WORST}}* carries the highest forgery score.
 
 The load-bearing case is *{{FABERGE_BORDERLINE_ARTIFACT}}*, the least-modern
-fake in the exhibit: only {{FABERGE_BORDERLINE_MODERN_PCT}}% of its mixture by
-weight post-dates its claimed year of {{FABERGE_BORDERLINE_YEAR}}, and the
-earliest offending pigment misses that date by just
-{{FABERGE_BORDERLINE_GAP_YEARS}} years. It is nonetheless flagged. That is the
-substantive claim: an all-modern composition would be caught by any channel,
-whereas this one is mostly period-correct and is resolved by the matched-filter
-anachronism evidence against a minority of modern material. Figure @fig:forgery
-shows the spectral fingerprints and UV responses that separate the classes.
+fake in the exhibit: {{FABERGE_BORDERLINE_MODERN_PCT}}% of its mixture by
+weight post-dates its claimed year of {{FABERGE_BORDERLINE_YEAR}} — a chalk
+ground that is period-correct, and a cadmium yellow plus an acrylic varnish
+that are not — and the earliest offending pigment misses that date by just
+{{FABERGE_BORDERLINE_GAP_YEARS}} years. It is nonetheless flagged.
+
+"Least modern" is relative to this exhibit and nothing more. Half a mixture is
+not a trace: the harder regime, where a few percent of modern material has to
+be resolved out of an otherwise period-correct object, is *not* exercised by
+the shipped exhibit and this package makes no claim about it. What the exhibit
+does establish is narrower — the screen is not relying on the trivial
+all-modern signature, since the other fake is wholly modern by weight and this
+one is not. Figure @fig:forgery shows the spectral fingerprints and UV
+responses that separate the classes.
 
 ![Spectral fingerprints of a genuine vs. a forged artifact and their UV
 fluorescence responses.](figures/forgery_fingerprints.png){#fig:forgery}
 
 ## Varnish ageing (forgery depth)
 
-Dating the same exhibit's varnish by yellowing kinetics, the genuine surface
-measures about {{FABERGE_VARNISH_GENUINE_AGE}} years —
-{{FABERGE_VARNISH_GENUINE_VERDICT}} with the claimed
-{{FABERGE_VARNISH_CLAIMED}} provenance. The freshly varnished duplicate dates
-to just ~{{FABERGE_VARNISH_FAKE_AGE}} years and is rejected as
-**{{FABERGE_VARNISH_FAKE_VERDICT}}**, at a claimed-era closeness of
-{{FABERGE_VARNISH_FAKE_CLOSENESS}}: its surface is decades younger than it
-claims to be. Because this channel reads varnish chemistry rather than pigment
-composition, it corroborates the forgery screen without sharing its failure
-mode.
+This channel dates two surfaces drawn from the same exhibit the pigment screen
+sees: *{{FABERGE_VARNISH_GENUINE_ARTIFACT}}*, whose natural shellac has been on
+the object since its claimed {{FABERGE_VARNISH_CLAIMED}} manufacture, and
+*{{FABERGE_VARNISH_FAKE_ARTIFACT}}*, whose acrylic coat the forger applied
+recently. Each surface is observed as its unvarnished substrate reflectance
+attenuated by the varnish film; the film's transmittance is recovered by
+dividing out that reference, and the yellowing kinetics are then inverted for
+an age.
+
+Read the two results separately, because they are not equally strong.
+
+**The fresh coat is rejected decisively.** Its true age is
+{{FABERGE_VARNISH_FAKE_TRUE_AGE}} years; the fit returns
+~{{FABERGE_VARNISH_FAKE_AGE}} years and the verdict is
+**{{FABERGE_VARNISH_FAKE_VERDICT}}** at a claimed-era closeness of
+{{FABERGE_VARNISH_FAKE_CLOSENESS}}. That is not one lucky draw: re-observing
+the same surface under {{FABERGE_VARNISH_TRIALS}} independent noise
+realizations gives a spread of only {{FABERGE_VARNISH_FAKE_STD}} years, and
+{{FABERGE_VARNISH_FAKE_REJECTED_TRIALS}} of {{FABERGE_VARNISH_TRIALS}}
+realizations reject the claimed provenance.
+
+**The century-old surface is not resolved at all.** Its authored true age is
+{{FABERGE_VARNISH_TRUE_AGE}} years, the fit returns
+~{{FABERGE_VARNISH_GENUINE_AGE}} years, and the single-draw verdict against its
+own claim is {{FABERGE_VARNISH_GENUINE_VERDICT}}. That verdict carries no
+information, and the ensemble is what shows it: across
+{{FABERGE_VARNISH_TRIALS}} realizations of the *same* surface the recovered age
+scatters by {{FABERGE_VARNISH_GENUINE_STD}} years, spanning
+{{FABERGE_VARNISH_GENUINE_MIN}} to {{FABERGE_VARNISH_GENUINE_MAX}} years; only
+{{FABERGE_VARNISH_GENUINE_CONSISTENT_TRIALS}} of {{FABERGE_VARNISH_TRIALS}}
+land inside the ±{{FABERGE_VARNISH_TOLERANCE}}-year tolerance; and the ensemble
+produces {{FABERGE_VARNISH_GENUINE_VERDICTS_SEEN}} distinct verdicts
+({{FABERGE_VARNISH_GENUINE_VERDICT_SPREAD}}) from one genuine object. Every
+outcome the classifier can emit is reachable from this surface by measurement
+noise alone, so which one the mission seed happens to draw says nothing about
+the object.
+
+The cause is physical rather than numerical: the yellowing kinetics saturate,
+so past roughly three time constants a further decade of ageing shifts the
+spectrum by less than the measurement noise, and the age stops being
+identifiable. A false rejection of a genuine object is therefore as available
+to this channel as a false confirmation.
+
+The honest summary of this channel is asymmetric: varnish ageing is a rejection
+instrument for recently re-varnished surfaces and is not a confirmation
+instrument for old ones. It reads film chemistry rather than pigment
+composition, so its rejection of the duplicate does not share the pigment
+screen's failure mode; but both channels observe the same synthetic exhibit
+under the same authored ground truth, so they are independent in *observable*,
+not in *sample*.
 
 ## Cover logistics
 
@@ -59,9 +105,20 @@ The schedule of {{FABERGE_ROLLING_TRIPS}} circus trips requires only
 {{FABERGE_ROLLING_MATCHING}} links (minimum path cover) resolves the
 itineraries with {{FABERGE_ROLLING_DEADHEAD}} total deadhead minutes. The
 Kuhn–Munkres depot allocation reaches a minimum total of
-{{FABERGE_ROLLING_DEPOT_COST}} minutes. The cover is therefore not merely
-routable but *staffable* — the corridor plan above does not exceed the
-trainsets the troupe can actually field.
+{{FABERGE_ROLLING_DEPOT_COST}} minutes.
+
+Those trips are a separate scenario from the min-cost flow, so the two
+pipelines only bear on each other if something compares them. The mission
+computes that comparison and reports it. Each of the
+{{FABERGE_COVER_ROUTED_LEGS}} station-to-station legs the flow routes must
+appear as a scheduled circus trip — every routed leg is covered:
+{{FABERGE_COVER_CORRIDOR_COVERED}} — and the trains the flow needs
+({{FABERGE_LOGISTICS_TRAINS}}) must not exceed the trainsets the schedule
+fields ({{FABERGE_ROLLING_TRAINSETS}}): {{FABERGE_COVER_FLEET_SUFFICIENT}}.
+Both are computed from the live pipeline outputs, and either goes false if the
+route or the schedule changes. What the matching proves on its own is only the
+fleet size the circus schedule requires; it is these two checks, not the
+matching, that tie the cover to the routed plan.
 
 ## Concealment sweep
 

@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import platform
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, cast
 
@@ -60,11 +59,16 @@ def borderline_anachronism(
     """Identify the exhibit's *hardest* forgery: the least-modern fake.
 
     A fake built entirely from modern material is trivially caught — any
-    channel would flag it. The discriminating case is the one that is mostly
-    period-correct, where only a minority of the mixture betrays it. So the
-    selection criterion is the **smallest anachronistic weight fraction** among
-    artifacts that have any anachronism at all; ties break toward the smaller
-    introduction gap.
+    channel would flag it. The discriminating case is the one with the least
+    modern material in it, so the selection criterion is the **smallest
+    anachronistic weight fraction** among artifacts that have any anachronism
+    at all; ties break toward the smaller introduction gap.
+
+    "Least modern" is relative to *this* exhibit and is not a claim that the
+    selected artifact is mostly period-correct: the returned fraction is the
+    measurement, and on the shipped exhibit it is half the mixture by weight.
+    The results section quotes the fraction rather than characterizing it, so
+    that a change to the exhibit cannot leave a stale adjective behind.
 
     Returns ``(artifact_name, claimed_year, min_gap_years,
     anachronistic_weight_fraction)`` where ``min_gap_years`` is how far the
@@ -101,12 +105,19 @@ def borderline_anachronism(
     return best
 
 
-def generate_variables(
-    *,
-    config_path: str | Path | None = None,
-    now: datetime | None = None,
-) -> dict[str, str]:
-    """Compute the full ``{{TOKEN}}`` → value mapping for the manuscript."""
+def generate_variables(*, config_path: str | Path | None = None) -> dict[str, str]:
+    """Compute the full ``{{TOKEN}}`` → value mapping for the manuscript.
+
+    No wall-clock value is emitted. A generation timestamp used to be part of
+    this mapping and was written into ``output/data/manuscript_variables.json``
+    and into the rendered experimental-setup section, which made the package's
+    own "regenerating leaves a byte-identical tree" claim false: two runs a
+    second apart differed. Determinism is worth more here than knowing when the
+    artifacts were last built, and mission provenance already carries an
+    ``input_hash``. ``PYTHON_VERSION`` is the one remaining environment-derived
+    value, so byte-identity holds for a fixed interpreter version — see
+    ``tests/test_manuscript_variables.py::test_regeneration_is_byte_identical``.
+    """
     config = load_manuscript_config(config_path)
     paper = config.get("paper", {})
     if not isinstance(paper, dict):
@@ -123,7 +134,6 @@ def generate_variables(
 
     borderline_name, borderline_year, borderline_gap, borderline_modern = borderline_anachronism()
 
-    stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
     return {
         "FABERGE_IDENTITY": IDENTITY,
         "FABERGE_CODENAME": CODENAME,
@@ -159,19 +169,38 @@ def generate_variables(
         "FABERGE_LOGISTICS_TRAINS": str(logistics_out["trains_needed"]),
         "FABERGE_SWEEP_FLAGGED": ", ".join(str(x) for x in cast("list[object]", concealment["flagged"])),
         "FABERGE_SWEEP_WORST": str(concealment["worst"] if concealment["worst"] else "none"),
-        # Varnish ageing (forgery depth).
+        # Varnish ageing (forgery depth). Both surfaces are exhibit artifacts;
+        # the *_TRUE_AGE tokens are the authored ground truth the estimator is
+        # scored against, and the scatter tokens are its measured error bar.
+        "FABERGE_VARNISH_GENUINE_ARTIFACT": str(varnish_out["genuine_artifact"]),
+        "FABERGE_VARNISH_FAKE_ARTIFACT": str(varnish_out["fake_artifact"]),
+        "FABERGE_VARNISH_TRUE_AGE": f"{float(cast('float', varnish_out['genuine_true_age'])):.0f}",
+        "FABERGE_VARNISH_FAKE_TRUE_AGE": f"{float(cast('float', varnish_out['fake_true_age'])):.0f}",
+        "FABERGE_VARNISH_TRIALS": str(varnish_out["trials"]),
+        "FABERGE_VARNISH_TOLERANCE": f"{float(cast('float', varnish_out['tolerance_years'])):.0f}",
         "FABERGE_VARNISH_GENUINE_AGE": str(varnish_out["genuine_estimated_age"]),
         "FABERGE_VARNISH_GENUINE_VERDICT": str(varnish_out["genuine_verdict"]),
+        "FABERGE_VARNISH_GENUINE_STD": str(varnish_out["genuine_age_std"]),
+        "FABERGE_VARNISH_GENUINE_MIN": str(varnish_out["genuine_age_min"]),
+        "FABERGE_VARNISH_GENUINE_MAX": str(varnish_out["genuine_age_max"]),
+        "FABERGE_VARNISH_GENUINE_CONSISTENT_TRIALS": str(varnish_out["genuine_consistent_trials"]),
+        "FABERGE_VARNISH_GENUINE_VERDICT_SPREAD": str(varnish_out["genuine_verdict_spread"]),
+        "FABERGE_VARNISH_GENUINE_VERDICTS_SEEN": str(varnish_out["genuine_verdicts_seen"]),
         "FABERGE_VARNISH_FAKE_AGE": str(varnish_out["fake_estimated_age"]),
         "FABERGE_VARNISH_FAKE_VERDICT": str(varnish_out["fake_verdict"]),
         "FABERGE_VARNISH_FAKE_CLOSENESS": str(varnish_out["fake_closeness"]),
+        "FABERGE_VARNISH_FAKE_STD": str(varnish_out["fake_age_std"]),
+        "FABERGE_VARNISH_FAKE_REJECTED_TRIALS": str(varnish_out["fake_rejected_trials"]),
         "FABERGE_VARNISH_CLAIMED": str(varnish_out["claimed_year"]),
-        # Rolling stock (logistics depth).
+        # Rolling stock (logistics depth) + the cross-pipeline cover check.
         "FABERGE_ROLLING_TRIPS": str(rolling_out["trips"]),
         "FABERGE_ROLLING_MATCHING": str(rolling_out["matching_edges"]),
         "FABERGE_ROLLING_TRAINSETS": str(rolling_out["trainsets"]),
         "FABERGE_ROLLING_DEADHEAD": str(rolling_out["deadhead_minutes"]),
         "FABERGE_ROLLING_DEPOT_COST": str(rolling_out["depot_assignment_cost"]),
+        "FABERGE_COVER_ROUTED_LEGS": str(rolling_out["routed_legs"]),
+        "FABERGE_COVER_CORRIDOR_COVERED": str(rolling_out["corridor_covered"]),
+        "FABERGE_COVER_FLEET_SUFFICIENT": str(rolling_out["fleet_sufficient"]),
         # Source localization (sweep depth).
         "FABERGE_SOURCE_ERROR_M": str(source_out["error_m"]),
         "FABERGE_SOURCE_STD_M": str(source_out["position_std_m"]),
@@ -181,7 +210,6 @@ def generate_variables(
         "FABERGE_SOURCE_ITERATIONS": str(source_out["iterations"]),
         "FABERGE_SOURCE_CONVERGED": str(source_out["converged"]),
         "PYTHON_VERSION": platform.python_version(),
-        "GENERATION_TIMESTAMP": stamp,
     }
 
 

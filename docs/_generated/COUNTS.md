@@ -6,9 +6,9 @@
 
 | Metric | Value | As of |
 |---|---|---|
-| Tests passed | 138 | 2026-08-04 |
-| Tests failed / skipped | 0 / 0 | 2026-08-04 |
-| Line+branch coverage on `src/` | 97.28 % | 2026-08-04 |
+| Tests passed | 155 | 2026-08-05 |
+| Tests failed / skipped | 0 / 0 | 2026-08-05 |
+| Line+branch coverage on `src/` | 97.43 % | 2026-08-05 |
 | Coverage gate (`--cov-fail-under`) | 90 % | — |
 | Pure domain modules | 6 | — |
 | Mission pipelines (`mission.PIPELINE_COUNT`) | 6 | — |

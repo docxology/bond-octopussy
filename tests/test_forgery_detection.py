@@ -30,8 +30,24 @@ def test_pigment_rejects_uv_out_of_range():
 
 
 def test_pigment_library_deterministic():
+    """Rebuilding the library must reproduce it exactly, entry for entry.
+
+    The previous version of this test asserted
+    `sorted(PIGMENT_LIBRARY) == sorted(PIGMENT_LIBRARY)` — a value compared
+    with itself, true under every possible implementation. The determinism it
+    named was untested. This compares a *fresh* build against the imported one,
+    including each pigment's reflectance array, so a library that varied
+    between builds would fail.
+    """
     assert fg.PIGMENT_COUNT == len(fg.PIGMENT_LIBRARY) == 14
-    assert sorted(fg.PIGMENT_LIBRARY) == sorted(fg.PIGMENT_LIBRARY)
+    rebuilt = fg._build_pigments()
+    assert sorted(rebuilt) == sorted(fg.PIGMENT_LIBRARY)
+    for name, pigment in fg.PIGMENT_LIBRARY.items():
+        other = rebuilt[name]
+        assert other.introduced == pigment.introduced
+        assert other.uv_emission == pigment.uv_emission
+        assert other.category == pigment.category
+        np.testing.assert_array_equal(other.reflectance, pigment.reflectance)
 
 
 def test_artifact_validation():

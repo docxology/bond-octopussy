@@ -12,7 +12,7 @@ physically motivated but illustrative. The
 {{FABERGE_NUM_CATEGORIES}}-category container catalog are deterministic
 fixtures, not measured instrumentation.
 
-Three limits follow and should be read with the results:
+These limits follow and should be read with the results:
 
 - **The exhibit is small and self-authored.** Separation between classes is
   measured on {{FABERGE_NUM_ARTIFACTS}} artifacts drawn from the same library
@@ -20,10 +20,37 @@ Three limits follow and should be read with the results:
   not an estimate of field accuracy. There is no genuine period piece using a
   pigment near the anachronism boundary, so the false-positive rate is
   untested.
-- **The varnish kinetics use one time constant.** Real varnish ageing depends
-  on resin, illumination history, and storage; a single τ is a first-order
-  stand-in, and the absolute ages should be read as consistency checks against
-  a claimed provenance rather than as datings.
+- **The hard anachronism regime is not exercised.** The exhibit's least-modern
+  fake is still {{FABERGE_BORDERLINE_MODERN_PCT}}% modern by weight. Nothing
+  here speaks to resolving a trace of modern material out of an otherwise
+  period-correct object, which is the case that would actually test the
+  matched-filter channel.
+- **Ground truth is authored, so these are estimator results.** Every number
+  reported here is measured on a synthetic scenario defined in this package —
+  the pigment mixtures, the true varnish ages, the emitter position, the rail
+  schedule. The results characterize how the estimators behave against a known
+  truth; they are not measurements of any physical object, and headline and
+  depth modules share that one scenario. The pairing gives independence of
+  observable, not independence of sample.
+- **The varnish kinetics use one time constant, and they saturate.** Real
+  varnish ageing depends on resin, illumination history, and storage; a single
+  τ is a first-order stand-in. More consequentially, the saturating exponential
+  means that past roughly three time constants a further decade of ageing moves
+  the spectrum by less than the measurement noise. As the results section
+  reports, the recovered age of the {{FABERGE_VARNISH_TRUE_AGE}}-year surface
+  scatters by {{FABERGE_VARNISH_GENUINE_STD}} years across
+  {{FABERGE_VARNISH_TRIALS}} noise realizations — wider than the
+  ±{{FABERGE_VARNISH_TOLERANCE}}-year tolerance it is judged against, and wide
+  enough to emit {{FABERGE_VARNISH_GENUINE_VERDICTS_SEEN}} distinct verdicts
+  from that one genuine object. This channel can reject a recent re-varnish; on
+  an old surface it produces a verdict with no information content, in either
+  direction, and none of its old-surface verdicts should be reported as
+  evidence.
+- **The two cover pipelines are linked by an explicit check, not by
+  construction.** The circus schedule is a fixture independent of the min-cost
+  flow. The results section reports two computed comparisons that connect them;
+  absent those, the matching would bound the circus fleet and say nothing at all
+  about the routed corridor plan.
 - **The sweep model is idealized.** Counts are Poisson about an inverse-square
   field with no scattering, no attenuation through cargo, and no
   energy-resolved spectroscopy — the discriminants a real portal monitor
@@ -63,4 +90,6 @@ source parameters follows standard nonlinear least-squares practice
 
 The contribution here is not any individual algorithm but the assembly: each
 discipline answered by two methods with disjoint failure modes, behind a single
-frozen mission protocol, with deterministic and audit-ready provenance.
+frozen mission protocol, with deterministic and audit-ready provenance — and
+with each depth method reporting the uncertainty that determines how much its
+agreement is worth.

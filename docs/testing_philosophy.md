@@ -109,12 +109,12 @@ quoted into prose elsewhere.
 | File | Covers |
 |---|---|
 | `test_forgery_detection.py` | Pigment/artifact validation, mixing, UV response, ridge NNLS unmixing, screening, class separation. |
-| `test_varnish_ageing.py` | Yellowing law, Beer–Lambert transmittance, golden-section age inversion, era verdicts, spectrum ageing, validation errors. |
+| `test_varnish_ageing.py` | Yellowing law, Beer–Lambert transmittance, golden-section age inversion, era verdicts, spectrum ageing, validation errors, surface-level dating (measure → recover transmittance → date), the three-verdict span, and the saturation error bar (`age_recovery_scatter`). |
 | `test_cover_logistics.py` | Network validation, min-cost flow (including capacity limits, infeasibility, and self-transfer rejection), transfer planning, Dijkstra routing, train packing. |
 | `test_rolling_stock.py` | Trip validation, successor compatibility, Hopcroft–Karp matching, minimum trainsets, itinerary chains, Kuhn–Munkres assignment. |
 | `test_concealment_sweep.py` | Sweep simulation and determinism, background/anomaly maps, hotspot detection and thresholding, mass anomaly, fused report ranking. |
 | `test_source_locator.py` | Forward model, weighted residual, Gauss–Newton recovery and diagnostics, uncertainty, the `DetectorLattice` protocol, degenerate inputs. |
-| `test_mission.py` | Protocol conformance and discovery, the `PIPELINES` invariant, derived sweep constants, provenance hashing, gadget registration, debrief coverage, layer-purity source scan. |
-| `test_manuscript_variables.py` | Config loading, token hydration, strict tree resolution, the four manuscript/bibliography gates, derived-token proofs. |
+| `test_mission.py` | Protocol conformance and discovery, the `PIPELINES` invariant, derived sweep constants, provenance hashing, gadget registration, debrief coverage, layer-purity source scan, the varnish↔exhibit coupling (with a flat-reference positive control), and the cross-pipeline cover check with both of its negative controls run through `run_faberge` itself. |
+| `test_manuscript_variables.py` | Config loading, token hydration, strict tree resolution, the four manuscript/bibliography gates, derived-token proofs, the no-wall-clock guard, and the byte-identical regeneration proof. |
 | `test_figures.py` | Deterministic PNG generation for all three figures. |
 | `test_scripts_smoke.py` | Subprocess execution of every thin CLI and the artifacts each writes. |

@@ -93,11 +93,20 @@ _SWEEP_BACKGROUND = 40.0
 _SWEEP_SOURCE = sweep.RadiationSource((7.0, 7.0), 800.0)
 _SWEEP_THRESHOLD = 3.0
 
-# Varnish-ageing scenario: claimed provenance vs a freshly-varnished fake.
-_VARNISH_CLAIMED = 1910
+# Varnish-ageing scenario. The two surfaces are *exhibit artifacts*, named
+# here and looked up in `forge.DEFAULT_EXHIBIT`: the varnish channel reads the
+# same objects the pigment screen reads, and each surface's claimed year comes
+# from its exhibit record rather than from a constant in this file.
+_VARNISH_GENUINE_ARTIFACT = "tsar_egg"  # natural shellac varnish, era-consistent mixture
+_VARNISH_FAKE_ARTIFACT = "forged_dupe"  # modern acrylic varnish over modern pigments
 _VARNISH_CURRENT = 2026
-_VARNISH_FAKE_AGE = 3.0
+#: Authored scenario ground truth: how long ago the forger's coat was applied.
+#: The genuine surface's true age is *not* a constant — it is derived from that
+#: artifact's claimed year, which is the null hypothesis the channel tests.
+_VARNISH_REVARNISH_AGE = 3.0
 _VARNISH_NOISE = 0.02
+#: Noise realizations used to measure the dating estimator's own error bar.
+_VARNISH_TRIALS = 32
 
 # Rolling-stock scenario: one long corridor chain plus a parallel spur service.
 _ROLLING_TURNAROUND = 20
@@ -119,6 +128,38 @@ _DEPOT_COST: tuple[tuple[float, ...], ...] = (
 )
 
 
+def _varnish_rng(seed: int) -> np.random.Generator:
+    """The varnish channel's own generator, derived from its pipeline index.
+
+    Separate from the forgery channel's stream so that changing one pipeline's
+    draw count cannot silently move another pipeline's numbers. Tests replicate
+    this derivation to bind reported ages to the exhibit they came from.
+    """
+    return np.random.default_rng((seed, PIPELINES.index("varnish")))
+
+
+def _exhibit_artifact(name: str) -> forge.Artifact:
+    """Look one artifact up in the live exhibit, failing loudly if it is gone."""
+    for artifact in forge.DEFAULT_EXHIBIT:
+        if artifact.name == name:
+            return artifact
+    raise KeyError(f"{name!r} is not in forge.DEFAULT_EXHIBIT; the varnish scenario has no surface to date")
+
+
+def _unvarnished_reference(artifact: forge.Artifact) -> np.ndarray:
+    """Reflectance of an exhibit artifact's substrate with the varnish removed.
+
+    The examiner's reference sample: the same pigment mixture as the object,
+    minus the varnish layer (an unvarnished edge or a cross-section). Reading
+    it off the exhibit record is what couples the varnish channel to the same
+    objects the pigment screen sees.
+    """
+    substrate = tuple((name, w) for name, w in artifact.mixture if forge.PIGMENT_LIBRARY[name].category != "varnish")
+    if not substrate:
+        raise ValueError(f"{artifact.name!r} is varnish only; it has no substrate to reference")
+    return forge.mix_spectrum(substrate)
+
+
 def _input_hash(codename: str, objectives: tuple[str, ...], plan: MissionPlan) -> str:
     """Deterministic sha256 fingerprint of the mission's defining inputs."""
     payload = {
@@ -130,7 +171,7 @@ def _input_hash(codename: str, objectives: tuple[str, ...], plan: MissionPlan) -
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def run_faberge(seed: int = SEED) -> dict[str, object]:
+def run_faberge(seed: int = SEED, *, trips: tuple[rolling.Trip, ...] = _ROLLING_TRIPS) -> dict[str, object]:
     """Run all six investigative pipelines; return structured results.
 
     The returned mapping has exactly :data:`PIPELINE_COUNT` top-level keys —
@@ -139,6 +180,12 @@ def run_faberge(seed: int = SEED) -> dict[str, object]:
     under the fixed ``seed``: every verdict, route, hotspot, age estimate,
     trainset chain and source fix is computed (never faked), and the result is
     JSON-serializable for mission reports.
+
+    ``trips`` is the circus schedule the rolling-stock pipeline circulates and
+    the cross-pipeline cover check is measured against. It is injectable so
+    that the negative control for that check — a schedule that does *not* cover
+    the routed corridor — exercises this function rather than a re-implemented
+    copy of it; the mission always runs the default.
     """
     # 1) Forgery detection — spectral/UV screen of the exhibit.
     rng = np.random.default_rng(seed)
@@ -199,34 +246,86 @@ def run_faberge(seed: int = SEED) -> dict[str, object]:
         "worst": report.worst.name if report.worst else None,
     }
 
-    # 4) Varnish ageing — date the exhibit's varnish against its claimed era.
-    bands = varnish.DEFAULT_BANDS
-    genuine_T = np.clip(
-        varnish.varnish_transmittance(bands, float(_VARNISH_CURRENT - _VARNISH_CLAIMED))
-        + rng.normal(0.0, _VARNISH_NOISE, size=bands.size),
-        0.0,
-        1.0,
+    # 4) Varnish ageing — date two *exhibit* surfaces against their claimed era.
+    #    Both surfaces are artifacts from forge.DEFAULT_EXHIBIT: the varnish
+    #    channel reads the same objects the pigment screen reads, through a
+    #    different physical observable (film chemistry, not composition).
+    #    Alongside each single dating we measure the estimator's own error bar
+    #    by re-observing the surface under independent noise draws — without it
+    #    a single verdict is an unfalsifiable claim.
+    varnish_rng = _varnish_rng(seed)
+    genuine_art = _exhibit_artifact(_VARNISH_GENUINE_ARTIFACT)
+    fake_art = _exhibit_artifact(_VARNISH_FAKE_ARTIFACT)
+    genuine_ref = _unvarnished_reference(genuine_art)
+    fake_ref = _unvarnished_reference(fake_art)
+    genuine_true_age = float(_VARNISH_CURRENT - genuine_art.claimed_year)
+    fake_true_age = float(_VARNISH_REVARNISH_AGE)
+
+    genuine_measured = varnish.measure_varnished_surface(
+        genuine_ref, genuine_true_age, rng=varnish_rng, noise_std=_VARNISH_NOISE
     )
-    fake_T = np.clip(
-        varnish.varnish_transmittance(bands, _VARNISH_FAKE_AGE) + rng.normal(0.0, _VARNISH_NOISE, size=bands.size),
-        0.0,
-        1.0,
+    fake_measured = varnish.measure_varnished_surface(
+        fake_ref, fake_true_age, rng=varnish_rng, noise_std=_VARNISH_NOISE
     )
-    genuine_assess = varnish.assess_varnish(genuine_T, _VARNISH_CLAIMED, _VARNISH_CURRENT)
-    fake_assess = varnish.assess_varnish(fake_T, _VARNISH_CLAIMED, _VARNISH_CURRENT)
+    genuine_assess = varnish.date_varnished_surface(
+        genuine_measured, genuine_ref, genuine_art.claimed_year, _VARNISH_CURRENT
+    )
+    fake_assess = varnish.date_varnished_surface(fake_measured, fake_ref, fake_art.claimed_year, _VARNISH_CURRENT)
+    genuine_scatter = varnish.age_recovery_scatter(
+        genuine_ref, genuine_true_age, rng=varnish_rng, trials=_VARNISH_TRIALS, noise_std=_VARNISH_NOISE
+    )
+    fake_scatter = varnish.age_recovery_scatter(
+        fake_ref, fake_true_age, rng=varnish_rng, trials=_VARNISH_TRIALS, noise_std=_VARNISH_NOISE
+    )
+    genuine_verdicts = [
+        varnish.age_verdict(genuine_art.claimed_year, _VARNISH_CURRENT, age)[0] for age in genuine_scatter.ages
+    ]
+    genuine_consistent = sum(1 for v in genuine_verdicts if v is varnish.AgeVerdict.CONSISTENT)
+    genuine_spread = ", ".join(
+        f"{level.value}×{genuine_verdicts.count(level)}"
+        for level in varnish.AgeVerdict
+        if genuine_verdicts.count(level)
+    )
+    fake_rejected = sum(
+        1
+        for age in fake_scatter.ages
+        if varnish.age_verdict(fake_art.claimed_year, _VARNISH_CURRENT, age)[0] is varnish.AgeVerdict.TOO_YOUNG
+    )
     varnish_block = {
-        "claimed_year": _VARNISH_CLAIMED,
+        "genuine_artifact": genuine_art.name,
+        "fake_artifact": fake_art.name,
+        "claimed_year": genuine_art.claimed_year,
         "current_year": _VARNISH_CURRENT,
+        "trials": _VARNISH_TRIALS,
+        "tolerance_years": genuine_scatter.tolerance_years,
+        "genuine_true_age": genuine_true_age,
         "genuine_estimated_age": round(float(genuine_assess.estimated_age), 1),
         "genuine_verdict": genuine_assess.verdict.value,
+        "genuine_age_std": round(float(genuine_scatter.std_age), 1),
+        "genuine_age_min": round(float(genuine_scatter.min_age), 1),
+        "genuine_age_max": round(float(genuine_scatter.max_age), 1),
+        "genuine_consistent_trials": genuine_consistent,
+        "genuine_verdict_spread": genuine_spread,
+        "genuine_verdicts_seen": len({v.value for v in genuine_verdicts}),
+        "fake_true_age": fake_true_age,
         "fake_estimated_age": round(float(fake_assess.estimated_age), 1),
         "fake_verdict": fake_assess.verdict.value,
         "fake_closeness": round(float(fake_assess.closeness), 3),
+        "fake_age_std": round(float(fake_scatter.std_age), 1),
+        "fake_rejected_trials": fake_rejected,
     }
 
-    # 5) Rolling-stock circulation — how many circus trainsets cover the trips.
-    fleet = rolling.fleet_circulation(_ROLLING_TRIPS, _ROLLING_TURNAROUND)
+    # 5) Rolling-stock circulation — how many circus trainsets cover the trips,
+    #    and whether that fleet can actually carry the routed corridor plan.
+    #    The two pipelines are only linked if something compares them, so the
+    #    comparison is computed here and reported: every segment the flow routes
+    #    must appear as a scheduled circus trip, and the trains the flow needs
+    #    must not exceed the trainsets the schedule fields.
+    fleet = rolling.fleet_circulation(trips, _ROLLING_TURNAROUND)
     depot = rolling.kuhn_munkres([list(row) for row in _DEPOT_COST])
+    scheduled_legs = {(trip.origin, trip.destination) for trip in trips}
+    routed_legs = {(origin, destination) for origin, destination, _ in transfer.edges_used}
+    uncovered = sorted(routed_legs - scheduled_legs)
     rolling_block = {
         "trips": fleet.trips,
         "trainsets": fleet.trainsets,
@@ -236,6 +335,12 @@ def run_faberge(seed: int = SEED) -> dict[str, object]:
         "chains": [list(chain) for chain in fleet.chains],
         "depot_assignment": [[int(r), int(c), round(float(cost), 1)] for r, c, cost in depot],
         "depot_assignment_cost": float(sum(cost for _, _, cost in depot)),
+        # Cross-pipeline cover check (logistics x rolling stock).
+        "routed_legs": len(routed_legs),
+        "uncovered_legs": [list(leg) for leg in uncovered],
+        "corridor_covered": not uncovered,
+        "trains_needed": transfer.trains_needed,
+        "fleet_sufficient": bool(transfer.trains_needed <= fleet.trainsets),
     }
 
     # 6) Source localization — locate the concealed emitter from the sweep,
@@ -334,7 +439,11 @@ class MissionProvider:  # noqa: N801 — class name is fixed by the discovery co
                 Step(name="forge_screen", action="fingerprint_exhibit", params={"seed": SEED}),
                 Step(name="route_cargo", action="min_cost_flow", params={"units": _LOGISTICS_UNITS}),
                 Step(name="concealed_sweep", action="radiation_mass_fusion", params={"threshold": _SWEEP_THRESHOLD}),
-                Step(name="varnish_age", action="yellowing_kinetics", params={"claimed": _VARNISH_CLAIMED}),
+                Step(
+                    name="varnish_age",
+                    action="yellowing_kinetics",
+                    params={"surface": _VARNISH_GENUINE_ARTIFACT, "trials": _VARNISH_TRIALS},
+                ),
                 Step(name="rolling_stock", action="fleet_circulation", params={"turnaround": _ROLLING_TURNAROUND}),
                 Step(name="source_locator", action="gauss_newton_localization", params={"tolerance": 1e-6}),
                 Step(name="verify", action="collect_provenance", params={"success": True}),

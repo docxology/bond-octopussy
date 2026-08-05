@@ -22,3 +22,28 @@ claims:
     description: "items flagged in the fused concealment report"
     source: "octopussy.mission.run_faberge -> results['concealment']['flagged']"
     deterministic: true
+  - id: "varnish_genuine_age_scatter"
+    description: >-
+      spread (years) of the varnish age recovered from the century-old exhibit
+      surface over independent noise realizations; exceeds the consistency
+      tolerance, which is why the 'consistent' verdict is a failure to reject
+      rather than a confirmation of provenance
+    source: "octopussy.mission.run_faberge -> results['varnish']['genuine_age_std']"
+    deterministic: true
+  - id: "varnish_fake_rejected_trials"
+    description: >-
+      number of noise realizations (out of results['varnish']['trials']) in
+      which the forger's fresh coat is rejected as too_young for its claimed era
+    source: "octopussy.mission.run_faberge -> results['varnish']['fake_rejected_trials']"
+    deterministic: true
+  - id: "cover_corridor_covered"
+    description: >-
+      whether every station-to-station leg the min-cost flow routes appears as a
+      scheduled circus trip; the cross-pipeline check that links the routed plan
+      to the rolling-stock schedule
+    source: "octopussy.mission.run_faberge -> results['rolling_stock']['corridor_covered']"
+    deterministic: true
+  - id: "cover_fleet_sufficient"
+    description: "whether the circus fleet size covers the trains the routed flow needs"
+    source: "octopussy.mission.run_faberge -> results['rolling_stock']['fleet_sufficient']"
+    deterministic: true

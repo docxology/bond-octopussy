@@ -22,10 +22,23 @@ document them again.
       the same four artifacts the suite screens. Widen the exhibit, then
       re-derive the thresholds from a held-out set so calibration and
       evaluation stop sharing data.
+- [ ] **The trace-anachronism regime is untested.** The exhibit's least-modern
+      fake is still half modern by weight, so nothing here shows the
+      matched-filter channel resolving a few percent of modern material out of
+      an otherwise period-correct object — the case that would actually be
+      hard. Add such an artifact and measure whether it is still flagged.
 - [ ] **Varnish kinetics use a single time constant.** τ is fixed for all
-      resins and illumination histories. Either parameterize τ per resin and
-      fit it jointly with age, or narrow the manuscript claim from "dates the
-      surface" to "tests consistency against a claimed provenance".
+      resins and illumination histories. Parameterize τ per resin and fit it
+      jointly with age. (The manuscript claim has already been narrowed: the
+      results and scope sections now report the channel as a rejection
+      instrument only, with the measured saturation scatter beside every
+      verdict.)
+- [ ] **Varnish dating saturates and cannot confirm old provenance.** With
+      τ = 40 y, a century-old surface sits past three time constants and its
+      recovered age scatters wider than the consistency tolerance. Stated in
+      the manuscript and measured by `age_recovery_scatter`; removing the
+      limitation needs a second observable that does not saturate (e.g. a
+      cross-linking or solubility proxy), not a better fit.
 - [ ] **The sweep model omits attenuation and spectroscopy.** Counts are
       Poisson about an inverse-square field with no scattering, no attenuation
       through intervening cargo, and no energy resolution — the discriminant a
@@ -39,9 +52,12 @@ document them again.
       neighbours, but the private access is load-bearing across ~6 call sites.
       Promote a read-only accessor and use it.
 - [ ] **`varnish_ageing.DEFAULT_BANDS` duplicates the forgery band grid.** The
-      two are equal by construction and by comment, not by code. If they ever
-      diverge, `mission.run_faberge` silently compares spectra on mismatched
-      grids. Derive one from the other or assert their equality in a test.
+      two are equal by construction, and since the varnish channel now
+      multiplies an exhibit spectrum by a transmittance band for band, a
+      divergence would be silently wrong rather than an error.
+      `tests/test_mission.py::test_varnish_and_forgery_share_one_band_grid`
+      binds them, which closes the silent-failure risk; deriving one grid from
+      the other would remove the duplication itself and is still open.
 - [ ] **Uncovered branches.** `cover_logistics` (93.3%) and `source_locator`
       (93.6%) carry the package's remaining uncovered lines — mostly
       defensive paths in the augmenting-path search and the Gauss–Newton line

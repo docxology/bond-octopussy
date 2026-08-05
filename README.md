@@ -8,8 +8,13 @@ deterministic algorithm modules and exposes them behind the frozen
 ## From film to software
 
 *Octopussy* turns on three problems, and the package implements each one
-twice — a headline detector plus an independent confirmer, so no verdict rests
-on a single method's failure mode.
+twice — a headline detector plus a depth module reading a different observable
+of the same scenario. The pairing buys independence of *observable*, not of
+sample, and a second observable only confirms anything to the extent its own
+uncertainty has been measured. It has been: the varnish channel decisively
+rejects a freshly re-varnished surface and returns only a *failure to reject*
+on a century-old one, because the yellowing kinetics saturate. See the results
+section of the manuscript for the measured scatter.
 
 | In the film | The problem | Headline module | Depth module |
 |---|---|---|---|

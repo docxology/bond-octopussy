@@ -32,7 +32,20 @@ structural `DetectorLattice` protocol rather than importing
 
 The design commitment is that each discipline is answered twice, by methods
 with disjoint failure modes. The headline module raises the alarm; the depth
-module tests the same conclusion along an independent route.
+module reaches the same question through a different observable.
+
+Two limits on what that buys, both load-bearing:
+
+1. **Independent observable, shared sample.** Every module runs on the same
+   synthetic scenario whose ground truth is authored in this package. The
+   pairing removes a shared *method* failure mode; it does not remove a shared
+   *scenario* failure mode.
+2. **A depth verdict is worth its own error bar.** `varnish_ageing` rejects a
+   freshly re-varnished surface in every noise realization and returns only a
+   failure to reject on a century-old one, because the yellowing kinetics
+   saturate and the recovered age scatters wider than the consistency
+   tolerance. `age_recovery_scatter` measures that; the manuscript reports it.
+   A depth module without a measured uncertainty is not a confirmer.
 
 | Discipline | Headline | Depth |
 |---|---|---|
@@ -66,6 +79,12 @@ Models a painted artifact as a weighted pigment mixture over a
 - Inverse: `estimate_varnish_age` — bounded golden-section least-squares fit
   over the age axis via `_golden_section_minimize`. Derivative-free and
   start-point-independent, so it is deterministic without a seed.
+- Surface chain: `measure_varnished_surface` (substrate reflectance attenuated
+  by the film), `recover_transmittance` (divide out the unvarnished reference),
+  `date_varnished_surface` (the whole chain end to end).
+- Uncertainty: `age_recovery_scatter` re-observes one surface of known age
+  under repeated noise draws and reports the spread — the channel's own error
+  bar, which is what distinguishes a rejection from a confirmation.
 - Decision: `age_verdict` and `assess_varnish` compare the estimated age with
   the age the claimed provenance implies, returning
   `AgeVerdict` (consistent / too_young / too_old) plus a closeness score.
