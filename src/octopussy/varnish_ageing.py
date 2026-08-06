@@ -52,6 +52,8 @@ from enum import Enum
 
 import numpy as np
 
+from octopussy import _bands
+
 __all__ = [
     "DEFAULT_ABSORPTION_PEAK",
     "DEFAULT_ABSORPTION_CENTER",
@@ -76,8 +78,12 @@ __all__ = [
     "yellowing_extent",
 ]
 
-#: Default UV-VIS band grid (nm) — matches the forgery spectrophotometer.
-DEFAULT_BANDS: np.ndarray = np.linspace(320.0, 760.0, 24, dtype=float)
+#: Default UV-VIS band grid (nm) — the shared spectrophotometer grid of
+#: :mod:`octopussy._bands`, so this channel can never silently drift from the
+#: pigment screen. The mission multiplies an exhibit spectrum (on the forgery
+#: module's grid) by a transmittance (on this grid) band for band and divides it
+#: back out again.
+DEFAULT_BANDS: np.ndarray = _bands.WAVELENGTH_BANDS
 
 #: Default yellowing time constant (years) for aged shellac.
 DEFAULT_TAU_YEARS = 40.0

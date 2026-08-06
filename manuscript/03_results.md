@@ -4,12 +4,39 @@ Executing the FABERGÉ mission (seed {{FABERGE_SEED}}) produces the following
 measured outcomes. Every figure below is emitted by the live run; none is
 transcribed by hand.
 
+## Results at a glance
+
+| Pipeline | Measured outcome |
+|---|---|
+| Forgery detection | {{FABERGE_SCREENED_ARTIFACTS}} artifacts screened, {{FABERGE_FLAGGED_FORGERY}} flagged as forged / likely-forged |
+| Varnish dating (depth) | fresh coat rejected in {{FABERGE_VARNISH_FAKE_REJECTED_TRIALS}}/{{FABERGE_VARNISH_TRIALS}} realizations; century-old surface scatters by {{FABERGE_VARNISH_GENUINE_STD}} years |
+| Cover logistics | cost {{FABERGE_LOGISTICS_COST}} unit-min, makespan {{FABERGE_LOGISTICS_MAKESPAN}} min, slack {{FABERGE_LOGISTICS_SLACK}} min |
+| Rolling stock (depth) | {{FABERGE_ROLLING_TRAINSETS}} trainsets over {{FABERGE_ROLLING_MATCHING}} successor links, {{FABERGE_ROLLING_DEADHEAD}} deadhead min |
+| Concealment sweep | flagged {{FABERGE_SWEEP_FLAGGED}}, worst {{FABERGE_SWEEP_WORST}} |
+| Source localization (depth) | position error {{FABERGE_SOURCE_ERROR_M}} m, positional std {{FABERGE_SOURCE_STD_M}} m |
+
+The table collapses the six pipelines into one line each; the sections below
+read each result against its own measured uncertainty, which the table does not
+— a headline number without its error bar is not a finding.
+
 ## Forgery detection
 
 The deterministic exhibit of {{FABERGE_NUM_ARTIFACTS}} artifacts yields
 {{FABERGE_SCREENED_ARTIFACTS}} screened readings, of which
-{{FABERGE_FLAGGED_FORGERY}} are flagged as forged or likely-forged. The honest
-period pieces score below the genuine threshold; the all-modern composition
+{{FABERGE_FLAGGED_FORGERY}} are flagged as forged or likely-forged. Per
+artifact, the disposition and the anachronistic pigments the residual evidence
+actually attributes:
+
+| Artifact | Disposition | Score | Anachronistic pigments |
+|---|---:|---:|---|
+| {{FABERGE_VERDICT_1_ARTIFACT}} | {{FABERGE_VERDICT_1_LEVEL}} | {{FABERGE_VERDICT_1_SCORE}} | {{FABERGE_VERDICT_1_ANACH}} |
+| {{FABERGE_VERDICT_2_ARTIFACT}} | {{FABERGE_VERDICT_2_LEVEL}} | {{FABERGE_VERDICT_2_SCORE}} | {{FABERGE_VERDICT_2_ANACH}} |
+| {{FABERGE_VERDICT_3_ARTIFACT}} | {{FABERGE_VERDICT_3_LEVEL}} | {{FABERGE_VERDICT_3_SCORE}} | {{FABERGE_VERDICT_3_ANACH}} |
+| {{FABERGE_VERDICT_4_ARTIFACT}} | {{FABERGE_VERDICT_4_LEVEL}} | {{FABERGE_VERDICT_4_SCORE}} | {{FABERGE_VERDICT_4_ANACH}} |
+
+The honest period pieces score below the genuine threshold and the detector
+attributes *no* modern pigment to them — the attribution is a residual-evidence
+finding, not an abundance artifact. The all-modern composition
 *{{FABERGE_FORGERY_WORST}}* carries the highest forgery score.
 
 The load-bearing case is *{{FABERGE_BORDERLINE_ARTIFACT}}*, the least-modern
@@ -83,6 +110,15 @@ composition, so its rejection of the duplicate does not share the pigment
 screen's failure mode; but both channels observe the same synthetic exhibit
 under the same authored ground truth, so they are independent in *observable*,
 not in *sample*.
+
+That asymmetry is a property of the kinetics, not of one dataset. Figure
+@fig:varnish sweeps true coating age and shows the recovered age tracking truth
+until the film is past roughly three time constants — after which the recovered
+age scatters beyond any single reading, which is exactly why the century-old
+surface above emits every verdict the classifier can produce.
+
+![Recovered varnish age against true coating age, showing the precision
+collapse at saturation.](figures/varnish_scatter.png){#fig:varnish}
 
 ## Cover logistics
 

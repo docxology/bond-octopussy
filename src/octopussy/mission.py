@@ -200,6 +200,7 @@ def run_faberge(seed: int = SEED, *, trips: tuple[rolling.Trip, ...] = _ROLLING_
                 "level": v.level.value,
                 "score": round(float(v.score), 4),
                 "reasons": list(v.reasons),
+                "anachronistic": list(v.anachronistic),
             }
             for v in verdicts
         ],

@@ -58,7 +58,10 @@ Two limits on what that buys, both load-bearing:
 ### `forgery_detection.py` — spectral/UV fingerprinting
 Models a painted artifact as a weighted pigment mixture over a
 `WAVELENGTH_BANDS` grid (`BAND_COUNT` bands from `BAND_MIN_NM` to
-`BAND_MAX_NM`), drawn from the immutable `PIGMENT_LIBRARY`.
+`BAND_MAX_NM`), drawn from the immutable `PIGMENT_LIBRARY`. The band grid is
+imported from the neutral `octopussy._bands` constant module — the single
+definition shared with `varnish_ageing`, so the two optical channels (one of
+which multiplies the other's spectra band-for-band) cannot silently drift.
 - Forward: `mix_spectrum`, `build_uv_response`, `measure_spectrum`,
   `read_artifact` — produce the noised `SpectrumReading` the detector sees.
   The detector never receives the true mixture.
@@ -169,13 +172,16 @@ hook and the module-level registry are part of the frozen discovery contract.
 
 ## Figures and manuscript
 
-`figures/` renders `forgery_fingerprints.png`, `rail_network.png`, and
-`sweep_heatmap.png` from the live domain algorithms under the Agg backend;
-`generate_all` is the single entry point and `FIGURES` is the canonical name
-list. `manuscript_variables.py` hydrates every manuscript token from
-`manuscript/config.yaml` plus a live `run_faberge` call, and
-`resolve_manuscript_tree` writes the resolved sections to `output/manuscript/`
-in strict mode — an unresolved token is a hard failure, never a rendered brace.
+`figures/` renders `forgery_fingerprints.png`, `rail_network.png`,
+`sweep_heatmap.png`, and `varnish_scatter.png` from the live domain algorithms
+under the Agg backend; `generate_all` is the single entry point and `FIGURES`
+is the canonical name list. The varnish figure pushes a sweep of true coating
+ages through `age_recovery_scatter` to show the recovered-age precision
+collapsing once the yellowing kinetics saturate. `manuscript_variables.py`
+hydrates every manuscript token from `manuscript/config.yaml` plus a live
+`run_faberge` call, and `resolve_manuscript_tree` writes the resolved sections
+to `output/manuscript/` in strict mode — an unresolved token is a hard failure,
+never a rendered brace.
 
 ## Boundaries (enforced, not aspirational)
 

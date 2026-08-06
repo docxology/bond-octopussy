@@ -322,3 +322,114 @@ Per-module coverage from gate 1 (the three below 100 % are tracked as **V4**):
 | `rolling_stock.py` | 96.54 % |
 | `source_locator.py` | 93.62 % |
 | `cover_logistics.py` | 93.31 % |
+
+---
+
+## Round-2 (2026-08-06)
+
+Round-2 deep-improvement pass: hostile review, defect fixes with regression
+tests, manuscript depth, gate closure. **Baseline:** 155 tests passed, 97.43 %
+line+branch coverage on `src/`, ruff/mypy clean. **Final:** 168 tests passed,
+0 failed, 0 skipped, 99.36 % coverage, ruff check/format/mypy clean, manuscript
+resolves with no unresolved token.
+
+### Defects found and fixed (each with a regression test)
+
+- **C1 — the screen named pigments the artifact does not contain.** The
+  `anachronistic` tuple was cut straight from the full-fit abundance
+  (`w > 1e-3`), so collinear "white" pigments picked up spurious weight: a
+  *genuine* tsar_egg and ballet_case reported acrylic_varnish,
+  phthalocyanine_blue and titanium_white; gilt_fake reported
+  phthalocyanine_blue. Worse than the backlog entry claimed — the hallucination
+  hit honest objects, not just the residue case. **Fix:** a per-pigment
+  residual-improvement descriptor (`_detect_anachronistic`,
+  `_ANACH_DETECT_LEVEL = 0.25`) — a modern pigment is *named* only when
+  admitting it to the era-consistent fit explains ≥ a quarter of the
+  era-inconsistent residual variance. Validated over 100 noise seeds: zero
+  false positives; forged_dupe's phthalocyanine_blue and gilt_fake's
+  cadmium_yellow still detected; verdicts and scores byte-unchanged. The
+  abundance floor could not be tuned to fix this (flat absent pigments carry
+  ~0.27 spurious abundance, larger than some real ones), which is why a
+  residual test rather than a threshold was the fix. Evidence:
+  `tests/test_forgery_detection.py::test_no_hallucinated_anachronistic_pigments`
+  (fails on the old code — it lists modern pigments on genuine artifacts), and
+  `output/data/mission_outcome.json` reasons now name only pigments present in
+  the artifact. Also fixed the latent `_compose_reasons` placeholder that
+  printed "anachronistic pigment(s) detected: yes" when a signal existed but no
+  pigment cleared the level (`test_compose_reasons_omits_placeholder_when_no_single_pigment_detects`).
+- **C2 — `cover_logistics` module functions bypassed the public accessors.**
+  Ten call sites read `network._segments` / `network._nodes` / `network._out`
+  directly, so any wrapper satisfying the public `.segments` / `.nodes`
+  surface silently broke the solver. **Fix:** all solver/planner/Dijkstra paths
+  now read through the properties; the now-dead `_out` adjacency was removed.
+  Evidence: `rg -n 'network\._segments|network\._nodes|network\._out'` → no
+  matches outside the class body; `tests/test_cover_logistics.py::test_solver_goes_through_public_accessors`
+  runs min-cost flow, the planner, and Dijkstra on a proxy that exposes only
+  the public surface.
+- **C3 — `varnish_ageing.DEFAULT_BANDS` duplicated the forgery grid.**
+  Two `np.linspace(320, 760, 24)` definitions made a silent band drift
+  possible. **Fix:** new `src/octopussy/_bands.py` is the single definition;
+  `forgery_detection.WAVELENGTH_BANDS` and `varnish_ageing.DEFAULT_BANDS` are
+  the *same array object* by import. Evidence: `rg 'linspace(320.0, 760.0'` →
+  one hit (in `_bands.py`); `tests/test_mission.py::test_bands_are_a_single_shared_definition`
+  asserts identity, not mere equality.
+
+### Defensive branches exercised (V4)
+
+Degenerate-input tests now reach the "when something goes wrong" paths:
+Gauss–Newton iteration-budget exhaustion, line-search halving, and the
+two-detector degeneracy (`test_source_locator.py`); the recursive matching
+reassignment and layered BFS (`test_rolling_stock.py::test_maximum_matching_reassigns_via_recursive_augment`);
+the min-cost-flow reverse-arc cancellation path with node-flow conservation
+(`test_cover_logistics.py::test_min_cost_flow_with_arc_cancellation_is_conserving`),
+a disconnected in-graph sink, and Dijkstra stale-heap entries; and the forgery
+noiseless / all-zero measurement guards. Result: `forgery_detection.py` and
+`rolling_stock.py` are now **100.00 %**; `source_locator.py` 98.58 %;
+`cover_logistics.py` 96.96 %.
+
+**Documented as unreachable by construction** (defensive guards, not fixable by
+more tests): `cover_logistics.py` `170->181` (Bellman–Ford outer loop cannot
+exhaust without a negative-cost cycle, absent by construction), `190` and `403`
+(parent chains are always complete when the target is reachable), `210`
+(relax() only admits moves with positive availability, so the bottleneck is
+always > 0), `316` (a valid min-cost flow always admits a full source→sink
+decomposition); `source_locator.py` `239` (the no-improvement-after-halving
+stop — a safety net that the well-conditioned inverse-square forward model
+never triggers across the probe geometries tried).
+
+### Manuscript depth
+
+- New engine-bound figure `figures/varnish.py` → `varnish_scatter.png`:
+  recovered varnish age vs true coating age across the saturation, rendered
+  from live `age_recovery_scatter` runs; byte-identical across regenerations.
+- `03_results.md`: new "Results at a glance" table (one line per pipeline) and
+  a per-artifact forgery-verdict table (disposition / score / attributed
+  anachronistic pigments) — every cell a manuscript token hydrated from the
+  live run; new `FABERGE_VERDICT_N_*` tokens in `manuscript_variables.py`
+  (positional over the exhibit, so renames cannot stale the table).
+- `02_methodology.md`: documents the attributable-evidence rule for naming
+  anachronistic pigments. All token cross-reference tests pass in both
+  directions.
+
+### Gates (final, this session)
+
+| # | Gate | Result |
+|---|---|---|
+| 1 | `uv run pytest tests/ --cov=src --cov-fail-under=90` | **168 passed**, 0 failed/skipped, **Total coverage 99.36 %** |
+| 2 | `uv run ruff check src/ scripts/ tests/` | All checks passed |
+| 3 | `uv run ruff format --check src/ scripts/ tests/` | 41 files already formatted |
+| 4 | `uv run mypy src/ scripts/` | Success: no issues found in 23 source files |
+| 5 | `scripts/z_generate_manuscript_variables.py` | exit 0; 9 sections resolved, 4 figures rendered |
+| 6 | exemplar-leftover scan | 5 hits, all lineage notes |
+| 7 | clean tree after commit | empty |
+
+### Left for a future round
+
+- **V1/V2/V3 remain deliberately deferred** (per the "Known limitations"
+  coupling note): any of them requires widening the exhibit, which shifts
+  `ARTIFACT_COUNT`, the flagged count, the worst scorer, the
+  `_level_for_score` thresholds, and the manuscript tokens quoting them. Land
+  that as its own commit when a fifth artifact is wanted.
+- **E1–E4 (extensions)** unchanged: per-resin τ, a second non-saturating age
+  observable, sweep attenuation/energy channels, and delegating provenance to
+  `bond-utilities` (the `datetime.now` caveat in E4 still applies).

@@ -68,6 +68,23 @@ def test_maximum_matching_empty():
     assert rs.maximum_matching(((),)) == {}
 
 
+def test_maximum_matching_reassigns_via_recursive_augment():
+    """A matching that improves only by relocating already-matched rights.
+
+    adjacency L0->{R1,R2}, L1->{R1}, L2->{R2,R3}. The monotone first sweep
+    leaves L1 unmatched; the size-3 maximum (L1->R1, L0->R2, L2->R3) is only
+    reachable by an augmenting path that recursively displaces L0 and L2 —
+    the DFS-reassignment and layered-BFS branches (V4) that run only when the
+    straightforward greedy pass is insufficient.
+    """
+    adj = ((1, 2), (1,), (2, 3))
+    match = rs.maximum_matching(adj)
+    assert len(match) == 3, match
+    assert sorted(match.values()) == [1, 2, 3]
+    # Deterministic: a second run must agree exactly.
+    assert rs.maximum_matching(adj) == match
+
+
 def test_minimum_trainsets_known():
     assert rs.minimum_trainsets(_trips(), 20) == 2
 

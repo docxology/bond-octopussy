@@ -236,6 +236,23 @@ def test_varnish_and_forgery_share_one_band_grid():
     np.testing.assert_array_equal(va.DEFAULT_BANDS, fg.WAVELENGTH_BANDS)
 
 
+def test_bands_are_a_single_shared_definition():
+    """C3: one band grid serves both optical channels — by identity, not luck.
+
+    The prior version duplicated ``np.linspace(320, 760, 24)`` in two modules
+    and relied on an array-equality assert downstream to catch drift. Both
+    modules now import the same array object from ``octopussy._bands``, so a
+    divergence is impossible rather than merely asserted-away.
+    """
+    from octopussy import _bands
+    from octopussy import forgery_detection as fg
+    from octopussy import varnish_ageing as va
+
+    assert fg.WAVELENGTH_BANDS is _bands.WAVELENGTH_BANDS
+    assert va.DEFAULT_BANDS is _bands.WAVELENGTH_BANDS
+    assert fg.BAND_MIN_NM == _bands.BAND_MIN_NM and fg.BAND_COUNT == _bands.BAND_COUNT
+
+
 def test_varnish_missing_artifact_fails_loudly():
     from octopussy.mission import _exhibit_artifact
 

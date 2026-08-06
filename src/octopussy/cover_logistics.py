@@ -98,7 +98,6 @@ class RailNetwork:
 
     def __init__(self, segments: tuple[Edge, ...] | None = None) -> None:
         self._segments: list[Edge] = []
-        self._out: dict[str, list[int]] = {}
         self._nodes: set[str] = set()
         for segment in segments if segments is not None else DEFAULT_NETWORK_SEGMENTS:
             self.add_segment(segment)
@@ -115,7 +114,6 @@ class RailNetwork:
         cleaned = Edge(origin, destination, int(edge.travel_time), int(edge.capacity), edge.label)
         self._segments.append(cleaned)
         self._nodes.update((origin, destination))
-        self._out.setdefault(origin, []).append(len(self._segments) - 1)
 
     @property
     def nodes(self) -> tuple[str, ...]:
@@ -130,7 +128,7 @@ class RailNetwork:
 
 def _residual_capacity(network: RailNetwork, edge_index: int, flows: dict[int, int]) -> int:
     """Forward residual capacity of edge ``edge_index`` given current flows."""
-    return network._segments[edge_index].capacity - flows.get(edge_index, 0)
+    return network.segments[edge_index].capacity - flows.get(edge_index, 0)
 
 
 def _augmenting_path(
@@ -148,7 +146,7 @@ def _augmenting_path(
     moves carry negative reduced cost, so Bellman-Ford is used (deterministic,
     integer-exact, no random or wall-clock behaviour).
     """
-    edges = network._segments
+    edges = network.segments
     n = len(edges)
     nodes = network.nodes
 
@@ -251,7 +249,7 @@ def min_cost_flow(
     if demand < 0:
         raise ValueError("demand must be non-negative")
     source, sink = _clean(source), _clean(sink)
-    if source not in network._nodes or sink not in network._nodes:
+    if source not in network.nodes or sink not in network.nodes:
         raise ValueError("source and sink must be stations in the network")
     if source == sink:
         raise ValueError("source and sink must be distinct stations")
@@ -272,7 +270,7 @@ def min_cost_flow(
         for move in moves:
             if move >= 0:
                 flows[move] = flows.get(move, 0) + push
-                total_cost += push * network._segments[move].travel_time
+                total_cost += push * network.segments[move].travel_time
             else:
                 index = -(move + 1)
                 flows[index] = flows.get(index, 0) - push
@@ -312,14 +310,14 @@ def _decompose_routes(network: RailNetwork, flow: dict[int, int], source: str, s
         steps = 0
         while current != sink:
             candidates = sorted(
-                i for i, e in enumerate(network._segments) if e.origin == current and remaining.get(i, 0) > 0
+                i for i, e in enumerate(network.segments) if e.origin == current and remaining.get(i, 0) > 0
             )
             if not candidates:
                 break
             index = candidates[0]
             remaining[index] -= 1
-            current = network._segments[index].destination
-            steps += network._segments[index].travel_time
+            current = network.segments[index].destination
+            steps += network.segments[index].travel_time
         lengths.append(steps)
     return lengths
 
@@ -357,7 +355,7 @@ def plan_transfer(
     lengths = _decompose_routes(network, flow.flow_per_edge, source, sink, payload_units)
     makespan = max(lengths) if lengths else 0
     edges_used = tuple(
-        (network._segments[i].origin, network._segments[i].destination, amount)
+        (network.segments[i].origin, network.segments[i].destination, amount)
         for i, amount in sorted(flow.flow_per_edge.items())
         if amount > 0
     )
@@ -380,7 +378,7 @@ def plan_transfer(
 def golden_ticket_route(network: RailNetwork, source: str, sink: str) -> tuple[str, ...]:
     """Least-cost single-unit route (Dijkstra), returned as a station chain."""
     source, sink = _clean(source), _clean(sink)
-    if source not in network._nodes or sink not in network._nodes:
+    if source not in network.nodes or sink not in network.nodes:
         raise LogisticsInfeasibleError(f"no route from {source!r} to {sink!r}")
     distances: dict[str, float] = {n: math.inf for n in network.nodes}
     previous: dict[str, str | None] = {n: None for n in network.nodes}
@@ -390,8 +388,7 @@ def golden_ticket_route(network: RailNetwork, source: str, sink: str) -> tuple[s
         d, node = heapq.heappop(heap)
         if d > distances[node]:
             continue
-        for index in network._out.get(node, []):
-            edge = network._segments[index]
+        for edge in (e for e in network.segments if e.origin == node):
             candidate = d + edge.travel_time
             if candidate < distances[edge.destination]:
                 distances[edge.destination] = candidate

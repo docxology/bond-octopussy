@@ -32,6 +32,8 @@ from enum import Enum
 
 import numpy as np
 
+from octopussy import _bands
+
 __all__ = [
     "ARTIFACT_COUNT",
     "BAND_COUNT",
@@ -56,13 +58,15 @@ __all__ = [
     "screen_reading",
 ]
 
-#: Spectrophotometer band grid limits (nm) and resolution.
-BAND_MIN_NM: float = 320.0
-BAND_MAX_NM: float = 760.0
-BAND_COUNT: int = 24
+#: Spectrophotometer band grid limits (nm) and resolution — the shared
+#: UV-VIS grid of :mod:`octopussy._bands`, so the varnish channel (which
+#: multiplies this module's spectra band for band) can never silently drift.
+BAND_MIN_NM: float = _bands.BAND_MIN_NM
+BAND_MAX_NM: float = _bands.BAND_MAX_NM
+BAND_COUNT: int = _bands.BAND_COUNT
 
 #: Wavelength grid (nm) of the UV-VIS spectrophotometer, 320–760 nm.
-WAVELENGTH_BANDS: np.ndarray = np.linspace(BAND_MIN_NM, BAND_MAX_NM, BAND_COUNT, dtype=float)
+WAVELENGTH_BANDS: np.ndarray = _bands.WAVELENGTH_BANDS
 _N_BANDS: int = int(WAVELENGTH_BANDS.size)
 
 #: Weighting of the three evidence channels in the final forgery score.
@@ -73,6 +77,17 @@ _RESIDUAL_WEIGHT = 0.2
 _UV_MID = 0.18
 #: Fraction of unexplained residual that maps to a full residual-evidence score.
 _RESIDUAL_SATURATION = 0.10
+#: A pigment counts as *detected anachronistic* only when admitting it to the
+#: era-consistent fit explains at least this fraction of the era-inconsistent
+#: residual variance. It is a decision level (a detection threshold), not an
+#: abundance floor: the flat "white" pigments are collinear, so the raw fitted
+#: abundance scatters weight onto modern pigments an artifact does not contain.
+#: A value of 0.25 means "this pigment must account for a quarter of the
+#: residual the era-consistent set could not explain" — a physically meaningful
+#: bar that separates genuinely-present sharp pigments (≈0.45+) from collinear
+#: residue (≤0.14) with margin in both directions on the noise realizations this
+#: exhibit is measured over. Not a fit to score separation.
+_ANACH_DETECT_LEVEL = 0.25
 
 #: Genuine varnish fluorescence (aged shellac), the reference baseline.
 _SHELLAC_UV = 0.15
@@ -352,8 +367,14 @@ def screen_reading(
     if total > 0.0:
         abundance = abundance / total
     matched = tuple((n, float(w)) for n, w in zip(full_names, abundance) if w > 1e-3)
-    anachronistic = tuple(
-        n for n, w in zip(full_names, abundance) if w > 1e-3 and lib[n].introduced > reading.claimed_year
+    anachronistic = _detect_anachronistic(
+        measured,
+        era_names,
+        full_names,
+        lib,
+        reading.claimed_year,
+        residual_era,
+        iterations=iterations,
     )
 
     reasons = _compose_reasons(anachronistic, anach_score, reading.uv, era_residual_score)
@@ -365,6 +386,50 @@ def screen_reading(
         matched=matched,
         reasons=tuple(reasons),
     )
+
+
+def _detect_anachronistic(
+    measured: np.ndarray,
+    era_names: list[str],
+    full_names: list[str],
+    lib: dict[str, Pigment],
+    claimed_year: int,
+    residual_era: float,
+    *,
+    iterations: int = 400,
+) -> tuple[str, ...]:
+    """Which anachronistic pigments the *residual evidence* supports.
+
+    A candidate modern pigment is counted as detected only when allowing it
+    into the era-consistent fit explains at least :data:`_ANACH_DETECT_LEVEL`
+    of the era-inconsistent residual variance
+
+    .. math:: 1 - \\left(\\frac{\\lVert r_{\\text{era}+p}\\rVert}{\\lVert r_{\\text{era}}\\rVert}\\right)^2 \\ge 0.25 .
+
+    This deliberately replaces a threshold on the fitted abundance. The flat
+    "white" pigments are collinear with the era whites, so the full-fit
+    abundance scatters weight onto modern pigments an artifact does not contain
+    — a genuine period piece routinely "reports" several modern pigments on
+    abundance alone, which is a defect: the *reason* it is the finding a reader
+    believes. The residual test separates the sharply-shaped modern pigments
+    that are genuinely present (which explain almost all of the era residual)
+    from the collinear residue of absent ones (which explain little or none).
+    A modern pigment whose shape the era set already spans is below this
+    channel's resolution and is honestly *not claimed*; the judgment is a
+    detection, not a rendering. Deterministic: candidates are visited in
+    ``full_names`` (sorted) order.
+    """
+    detected: list[str] = []
+    for name in full_names:
+        if lib[name].introduced <= claimed_year:
+            continue
+        candidate_names = sorted(set(era_names + [name]))
+        candidate_matrix = np.stack([np.asarray(lib[n].reflectance, dtype=float) for n in candidate_names])
+        _, residual_candidate, _ = _nnls_fit(measured, candidate_matrix, iterations)
+        improvement = 1.0 - (residual_candidate / residual_era) ** 2 if residual_era > 1e-12 else 0.0
+        if improvement >= _ANACH_DETECT_LEVEL:
+            detected.append(name)
+    return tuple(detected)
 
 
 def _level_for_score(score: float) -> ForgeryLevel:
@@ -407,8 +472,12 @@ def _compose_reasons(
 ) -> list[str]:
     """Build human-readable evidence strings for a verdict."""
     reasons: list[str] = []
-    if anach_score > 0.05:
-        reasons.append(f"anachronistic pigment(s) detected: {', '.join(anachronistic) if anachronistic else 'yes'}")
+    if anach_score > 0.05 and anachronistic:
+        # Only name pigments the residual evidence actually attributes. When an
+        # anachronism signal is present but no single pigment cleared the
+        # detection level, saying "detected: yes" would be a placeholder that
+        # reads as a finding — omit it rather than fabricate a name.
+        reasons.append("anachronistic pigment(s) detected: " + ", ".join(anachronistic))
     if uv_response > _UV_MID:
         reasons.append(f"UV fluorescence anomaly (response {uv_response:.2f})")
     if era_residual_score > 0.4:

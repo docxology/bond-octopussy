@@ -134,6 +134,18 @@ def generate_variables(*, config_path: str | Path | None = None) -> dict[str, st
 
     borderline_name, borderline_year, borderline_gap, borderline_modern = borderline_anachronism()
 
+    # Per-artifact forgery verdict tokens (the results table). Positional so a
+    # rename of an exhibit artifact updates the table without a prose edit.
+    verdicts = cast("list[dict[str, object]]", forgery["verdicts"])
+    verdict_tokens: dict[str, str] = {}
+    for index, verdict in enumerate(verdicts, start=1):
+        prefix = f"FABERGE_VERDICT_{index}"
+        verdict_tokens[f"{prefix}_ARTIFACT"] = str(verdict["artifact"])
+        verdict_tokens[f"{prefix}_LEVEL"] = str(verdict["level"])
+        verdict_tokens[f"{prefix}_SCORE"] = f"{float(cast('float', verdict['score'])):.2f}"
+        detected = cast("list[str]", verdict["anachronistic"])
+        verdict_tokens[f"{prefix}_ANACH"] = ", ".join(detected) if detected else "none"
+
     return {
         "FABERGE_IDENTITY": IDENTITY,
         "FABERGE_CODENAME": CODENAME,
@@ -210,6 +222,7 @@ def generate_variables(*, config_path: str | Path | None = None) -> dict[str, st
         "FABERGE_SOURCE_ITERATIONS": str(source_out["iterations"]),
         "FABERGE_SOURCE_CONVERGED": str(source_out["converged"]),
         "PYTHON_VERSION": platform.python_version(),
+        **verdict_tokens,
     }
 
 

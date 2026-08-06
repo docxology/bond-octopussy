@@ -31,6 +31,14 @@ Three evidence channels are combined:
    residual when modern pigments are allowed, is direct evidence of a modern
    forgery. Both statistics are deliberately computed from the residual rather
    than from individual fitted weights, which collinearity makes unreliable.
+   The *named* set of anachronistic pigments is likewise attributable-evidence
+   based: a modern pigment appears in the finding only when admitting it to the
+   era-consistent fit explains a material share of the era-inconsistent
+   residual. Flat "white" pigments are collinear with the era whites, so their
+   fitted weight is not a reliable presence signal — an abundance-only cutoff
+   made a genuine period piece "report" modern pigments it does not contain.
+   The residual test names a modern pigment only when its spectral shape is
+   actually needed, and stays silent about collinear ones it cannot resolve.
 2. **UV fluorescence anomaly.** Aged natural-resin varnish fluoresces weakly;
    young synthetic varnishes fluoresce brightly — the observation underlying
    routine UV examination of paint and varnish layers
