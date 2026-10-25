@@ -3,7 +3,10 @@
 A BOND-suite film package (film *Octopussy*, 1983; mission codename
 **FABERGÉ**). It implements the film's investigative problems as six pure,
 deterministic algorithm modules and exposes them behind the frozen
-[BOND-API](../bond-api/) `MissionProvider` contract.
+sibling `bond-api` `MissionProvider` contract.
+
+**Upstream:** <https://github.com/docxology/bond-octopussy> (default branch
+`main`).
 
 ## From film to software
 

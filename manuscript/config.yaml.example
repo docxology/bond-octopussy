@@ -16,7 +16,7 @@ authors:
     corresponding: true
 
 publication:
-  github_repository: "projects/working/bond/octopussy"
+  github_repository: "docxology/bond-octopussy"
   journal: "BOND Mission Software Series"
   year: "2026"
 

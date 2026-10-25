@@ -7,9 +7,9 @@ tags: [bond, faberge, forgery-detection, min-cost-flow, mission-provider]
 
 # octopussy
 
-Build/maintain the **Octopussy: FABERGÉ** BOND film package at
-`projects/working/bond/octopussy/`. This is a **local-only** package: no
-remote, never push, scope = this directory only.
+Build/maintain the **Octopussy: FABERGÉ** BOND film package in this repository
+(`bond-octopussy`, upstream <https://github.com/docxology/bond-octopussy>,
+default branch `main`). Scope = this directory only.
 
 ## When to use
 
@@ -34,17 +34,26 @@ imports `octopussy.mission.MissionProvider`.
 
 ## Modules
 
+Six pure domain modules, paired one headline detector + one depth module per
+investigative problem:
+
 - `src/octopussy/forgery_detection.py` — spectral/UV forgery screen (ridge
   NNLS unmixing + UV fluorescence + matched-filter anachronism).
+- `src/octopussy/varnish_ageing.py` — Beer–Lambert varnish yellowing kinetics;
+  dates a surface by bounded golden-section search.
 - `src/octopussy/cover_logistics.py` — min-cost flow (successive shortest
   paths), golden-ticket Dijkstra, circus-train packing.
+- `src/octopussy/rolling_stock.py` — Hopcroft–Karp trainset circulation +
+  Kuhn–Munkres depot allocation.
 - `src/octopussy/concealment_sweep.py` — radiation anomaly + shape/mass
   anomaly fusion.
-- `src/octopussy/mission.py` — thin `bond_api` adapter + gadget registry.
+- `src/octopussy/source_locator.py` — damped Gauss–Newton emitter localization.
+- `src/octopussy/mission.py` — thin `bond_api` adapter + gadget registry;
+  `manuscript_variables.py` and `figures/` sit beside it.
 
 ## Pitfalls
 
-- **Domain purity**: the three domain modules must stay free of
+- **Domain purity**: the six domain modules must stay free of
   `infrastructure` and `bond_api` imports (mission.py is the only importer).
 - **Determinism**: all RNG via `numpy.random.default_rng(seed)` with seed 7;
   no wall-clock in persisted artifacts.

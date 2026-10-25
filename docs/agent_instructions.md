@@ -1,13 +1,13 @@
 # Agent instructions — Octopussy: FABERGÉ
 
-Operational constraints for agents working inside this BOND film package.
-This project is **local-only**: no remote, never push. Scope = this directory.
+Operational constraints for agents working inside this BOND film package:
+`bond-octopussy`, upstream <https://github.com/docxology/bond-octopussy>
+(default branch `main`). Scope = this directory.
 
 ## Hard rules
 
-1. **Scope.** Modify only `projects/working/bond/octopussy/`. Never touch a
-   sibling package, the bond root files, or the template repo. `git add -A`
-   only inside this repo.
+1. **Scope.** Modify only this repository. Never touch a sibling BOND package
+   or the template repo. `git add -A` only inside this repo.
 
 2. **Layer purity.** The six domain modules — `forgery_detection.py`,
    `varnish_ageing.py`, `cover_logistics.py`, `rolling_stock.py`,

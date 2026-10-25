@@ -5,12 +5,11 @@ codename **FABERGÉ**. It implements the film's three investigative problems —
 authenticity, cover logistics, concealment — as six pure deterministic domain
 modules under `src/octopussy/`, paired one headline detector + one depth module
 per problem, exposed behind the frozen `bond_api` `MissionProvider` contract in
-`src/octopussy/mission.py`. Verified state as of commit `9583c27` on
-2026-08-05: **155 tests pass, 97.43 % line+branch coverage on `src/`**
-(measured this session by `uv run pytest tests/ --cov=src --cov-fail-under=90`,
-matching `docs/_generated/COUNTS.md`). Ruff check, ruff format --check, and
-mypy on `src/ scripts/` are all clean; the exemplar-leftover gate returns only
-the four permitted lineage notes.
+`src/octopussy/mission.py`. Verified state: see the
+[Round-2 record](#round-2-2026-08-06) below and
+[`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md), which carries the last
+measured counts. Ruff check, ruff format --check, and mypy on `src/ scripts/`
+are clean, and the exemplar-leftover gate returns only permitted lineage notes.
 
 This file is **remaining work only**. Completed phases are not recorded here —
 git history is the record.
@@ -19,9 +18,14 @@ git history is the record.
 
 ## Open work
 
+> Items marked **closed in Round-2** are kept here only as a pointer: the fix,
+> its regression test, and the final gate numbers are in the
+> [Round-2 record](#round-2-2026-08-06) below. C1, C2, C3 and V4 closed there;
+> V1–V3 remain open by deliberate deferral.
+
 ### Correctness
 
-#### C1 — The screen names pigments the artifact does not contain
+#### C1 — The screen names pigments the artifact does not contain — **closed in Round-2**
 
 `screen_artifact` reports a fitted anachronism tuple derived from the unmixing
 solution, filtered only by an abundance floor of `1e-3`
@@ -66,7 +70,7 @@ treats as the finding — is wrong, and it is written into
   PY
   ```
 
-#### C2 — `cover_logistics` module functions bypass the accessors that exist
+#### C2 — `cover_logistics` module functions bypass the accessors that exist — **closed in Round-2**
 
 `RailNetwork` already exposes read-only `nodes` and `segments` properties
 (`src/octopussy/cover_logistics.py:120-126`), but ten module-level call sites
@@ -77,13 +81,13 @@ satisfies the public surface silently breaks the solver.
 
 - **Done looks like:** zero `network._segments` / `network._nodes` occurrences
   outside the class body; the min-cost-flow and Dijkstra paths read through
-  `.segments` / `.nodes`; the suite still passes at 155/155 with unchanged
-  results in `output/data/mission_outcome.json`.
+  `.segments` / `.nodes`; the suite still passes with unchanged results in
+  `output/data/mission_outcome.json`.
 - **Command:**
   `rg -n 'network\._segments|network\._nodes' src/octopussy/cover_logistics.py` → no matches;
   then `uv run pytest tests/ --cov=src --cov-fail-under=90`.
 
-#### C3 — `varnish_ageing.DEFAULT_BANDS` duplicates the forgery band grid
+#### C3 — `varnish_ageing.DEFAULT_BANDS` duplicates the forgery band grid — **closed in Round-2**
 
 `src/octopussy/varnish_ageing.py:80` defines
 `np.linspace(320.0, 760.0, 24)` independently of
@@ -163,7 +167,7 @@ so the prose is honest — but the regime is still unexercised.
   itself the honest result.
 - **Command:** `uv run pytest tests/test_manuscript_variables.py -q -k borderline`
 
-#### V4 — Uncovered defensive branches in three modules
+#### V4 — Uncovered defensive branches in three modules — **closed in Round-2**
 
 Measured this session: `cover_logistics.py` **93.31 %** (missing
 `172->183, 192, 195, 206, 212, 277-278, 318, 392, 401, 406`),
@@ -292,13 +296,14 @@ disagree, change the manuscript claim first.
   coordinator, and the orchestrator consume them across packages.
 - Figures and manuscript variables are regenerated, never hand-maintained.
 - No mock framework, ever. Deterministic seeds, always.
-- Local-only tree: commit inside this repo, never push.
+- Repository: upstream `https://github.com/docxology/bond-octopussy`, default
+  branch `main`. Commits are path-scoped to this directory.
 
 ---
 
 ## Verification
 
-Run in this order from `projects/working/bond/octopussy/`. `uv sync --extra dev`
+Run in this order from the repository root (`bond-octopussy`). `uv sync --extra dev`
 first — `bond-api` resolves by local path. Under a restrictive sandbox `uv`
 cannot write its cache; `Failed to initialize cache` is an environment
 restriction, not a package failure.

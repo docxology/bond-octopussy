@@ -6,7 +6,7 @@ version: "0.1.0"
 
 # Docs directory (octopussy)
 
-Rules for editing `projects/working/bond/octopussy/docs/`. Package-wide agent
+Rules for editing `docs/`. Package-wide agent
 rules live in [`agent_instructions.md`](agent_instructions.md); repository-wide
 rules live in [`../AGENTS.md`](../AGENTS.md).
 

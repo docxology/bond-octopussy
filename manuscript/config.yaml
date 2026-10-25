@@ -16,10 +16,11 @@ authors:
     corresponding: true
 
 publication:
-  # Local-only BOND working tree: no remote, no external deposit. DOI fields
-  # are intentionally omitted (see the BOND suite guardrails and
-  # bond-utilities phase-1 record).
-  github_repository: "projects/working/bond/octopussy"
+  # Repository: https://github.com/docxology/bond-octopussy
+  # DOI fields are intentionally omitted — no archival release has been minted
+  # for this package (see the BOND suite guardrails and the bond-utilities
+  # phase-1 record).
+  github_repository: "docxology/bond-octopussy"
   journal: "BOND Mission Software Series"
   year: "2026"
 

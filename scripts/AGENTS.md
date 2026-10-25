@@ -10,8 +10,8 @@ Thin orchestrators only. Rules:
 
 - Business logic belongs in `src/octopussy/`, never here.
 - Bootstrap `src/` with a `sys.path.insert` before local imports and mark those
-  import lines with `# noqa: E402` (deep monorepo path — the root per-file
-  ignore does not cover `projects/working/bond/<pkg>/scripts/`).
+  import lines with `# noqa: E402` (deep src-layout path — the lint config has
+  no per-file ignore for `scripts/`).
 - Deterministic: no wall-clock writes; write regenerable artifacts under
   `output/`.
 - Subprocess smoke tests run these with `sys.executable` and `cwd=project_root`.

@@ -1,8 +1,8 @@
 # AGENTS.md — Octopussy: FABERGÉ
 
-This is a BOND-suite film package inside `projects/working/bond/octopussy/`.
-It is a local-only working tree: **no remote, never push**. Scope is exactly
-this directory.
+This is a BOND-suite film package in this repository
+(`bond-octopussy`, upstream <https://github.com/docxology/bond-octopussy>,
+default branch `main`). Scope is exactly this directory.
 
 ## Build and test
 

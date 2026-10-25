@@ -4,7 +4,7 @@ type: "manuscript_guide"
 version: "0.1.0"
 ---
 
-# Manuscript (`projects/working/bond/octopussy/manuscript/`)
+# Manuscript (`manuscript/`)
 
 This file covers manuscript-specific editing for the FABERGÉ film package:
 file roles, the `{{VARIABLE}}` token protocol, figure protocol, and the
