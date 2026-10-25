@@ -11,8 +11,10 @@ per problem, exposed behind the frozen `bond_api` `MissionProvider` contract in
 measured counts. Ruff check, ruff format --check, and mypy on `src/ scripts/`
 are clean, and the exemplar-leftover gate returns only permitted lineage notes.
 
-This file is **remaining work only**. Completed phases are not recorded here —
-git history is the record.
+This file is **open work only**; closed items are marked in place with a pointer
+to the [Round-2 record](#round-2-2026-08-06) below, which carries the last
+measured state. Phases before Round-2 are not restated — git history is the
+record.
 
 ---
 
@@ -193,12 +195,12 @@ line-search halving loop (`source_locator.py:230-239`), and the Hopcroft–Karp
 
 **None open.** Checked this session: `README.md` (module table, frozen-surface
 table, gate table) matches `src/octopussy/` and `mission.py`; `AGENTS.md` gate
-list runs clean end to end; `docs/_generated/COUNTS.md` reports 155 tests /
-97.43 % / per-module figures identical to the run above;
+list runs clean end to end; `docs/_generated/COUNTS.md` carries the last
+measured counts, and the Round-2 record below carries the gate results;
 `manuscript/06_reproducibility.md` and `docs/agent_instructions.md:33` state
 the no-wall-clock rule, and `rg -n 'GENERATION_TIMESTAMP'` finds no live
 emitter (only the historical note at
-`src/octopussy/manuscript_variables.py:111`). The four `template_code_project`
+`src/octopussy/manuscript_variables.py:111`). The five `template_code_project`
 hits are lineage notes, which the gate permits.
 
 ---
@@ -308,25 +310,19 @@ first — `bond-api` resolves by local path. Under a restrictive sandbox `uv`
 cannot write its cache; `Failed to initialize cache` is an environment
 restriction, not a package failure.
 
-| # | Gate | Command | Expected (measured 2026-08-05) |
+| # | Gate | Command | Green means |
 |---|---|---|---|
-| 1 | Tests + branch coverage | `uv run pytest tests/ --cov=src --cov-fail-under=90` | `155 passed`, `Total coverage: 97.43%` |
+| 1 | Tests + branch coverage | `uv run pytest tests/ --cov=src --cov-fail-under=90` | 0 failed, 0 skipped, coverage ≥ the 90 % floor — live figures in [`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md), never quoted here |
 | 2 | Lint | `uv run ruff check src/ scripts/ tests/` | `All checks passed!` |
-| 3 | Format | `uv run ruff format --check src/ scripts/ tests/` | `39 files already formatted` |
-| 4 | Types | `uv run mypy src/ scripts/` | `Success: no issues found in 21 source files` |
+| 3 | Format | `uv run ruff format --check src/ scripts/ tests/` | every file already formatted |
+| 4 | Types | `uv run mypy src/ scripts/` | no issues found |
 | 5 | Manuscript resolves, no unresolved token | `uv run python scripts/z_generate_manuscript_variables.py` | exit 0, writes `output/manuscript/` |
-| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` | 4 hits, all lineage notes (`README.md:123`, `STANDALONE.md:7`, `AGENTS.md:52`, `docs/AGENTS.md:40`) |
+| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` | every hit is a lineage note (`README.md`, `STANDALONE.md`, `AGENTS.md`, `docs/AGENTS.md`, this file) |
 | 7 | Clean tree after a path-scoped commit | `git status --short` | empty |
 
-Per-module coverage from gate 1 (the three below 100 % are tracked as **V4**):
-
-| Module | Coverage |
-|---|---|
-| `concealment_sweep.py`, `varnish_ageing.py`, `mission.py`, `manuscript_variables.py`, `figures/*` | 100.00 % |
-| `forgery_detection.py` | 97.96 % |
-| `rolling_stock.py` | 96.54 % |
-| `source_locator.py` | 93.62 % |
-| `cover_logistics.py` | 93.31 % |
+Per-module coverage lives in [`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md)
+(regenerated, never restated here; **V4** was closed in Round-2, which took the
+two reachable modules that were still below 100 % up to 100 %).
 
 ---
 
