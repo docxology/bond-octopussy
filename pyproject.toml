@@ -33,7 +33,7 @@ dev = [
 [tool.uv.sources]
 # FROZEN protocol dependency: bond-api is Layer 1 of the BOND suite and must be
 # resolvable from this film package. `uv sync --extra dev` before pytest.
-bond-api = { path = "/Users/4d/Documents/GitHub/template/projects/working/bond/bond-api" }
+bond-api = { path = "../bond-api" }
 
 [tool.pytest.ini_options]
 # RASP Strict Assertion: Tests must be clearly separated and structurally identifiable
