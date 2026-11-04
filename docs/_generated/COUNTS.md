@@ -6,13 +6,24 @@
 
 | Metric | Value | As of |
 |---|---|---|
-| Tests passed | 168 | 2026-08-06 |
-| Tests failed / skipped | 0 / 0 | 2026-08-06 |
-| Line+branch coverage on `src/` | 99.36 % | 2026-08-06 |
+| Tests passed | 169 | 2026-11-04 |
+| Tests failed / skipped | 0 / 0 | 2026-11-04 |
+| Line+branch coverage on `src/` | 99.36 % | 2026-11-04 |
 | Coverage gate (`--cov-fail-under`) | 90 % | — |
 | Pure domain modules | 6 | — |
 | Mission pipelines (`mission.PIPELINE_COUNT`) | 6 | — |
 | Mock frameworks in use | 0 | — |
+
+## Lint and types (same run)
+
+| Check | Result | As of |
+|---|---|---|
+| `ruff check src/ scripts/ tests/` | **45 findings** — gate not yet green, tracked as D2 in [`../../TODO.md`](../../TODO.md) | 2026-11-04 |
+| `ruff format --check src/ scripts/ tests/` | 43 files already formatted | 2026-11-04 |
+| `mypy src/ scripts/` | no issues found in 24 source files | 2026-11-04 |
+| `scripts/vendor.py --check` | `vendor/bond-api: ok`, 0 finding(s) | 2026-11-04 |
+| Ruff version / declared width | 0.16.1 / `line-length = 120` ([`../../pyproject.toml`](../../pyproject.toml)) | 2026-11-04 |
+| Two consecutive regenerations of `output/` | byte-identical (md5 `5fbefbf11c887363`) | 2026-11-04 |
 
 ## Per-module coverage (same run)
 
