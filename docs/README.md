@@ -30,6 +30,6 @@ measured number that could go stale.
 - **Manuscript token protocol, figure protocol, section workflow** —
   [`../manuscript/AGENTS.md`](../manuscript/AGENTS.md) and
   [`../manuscript/SYNTAX.md`](../manuscript/SYNTAX.md).
-- **The frozen cross-package protocol itself** — the sibling `bond-api`
-  package (`bond_api.protocol`), which this package consumes and must not
-  modify.
+- **The frozen cross-package protocol itself** — the `bond-api` package
+  (`bond_api.protocol`), recorded in this repository at `vendor/bond-api`, which
+  this package consumes and must not modify.

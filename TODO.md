@@ -306,19 +306,21 @@ disagree, change the manuscript claim first.
 ## Verification
 
 Run in this order from the repository root (`bond-octopussy`). `uv sync --extra dev`
-first — `bond-api` resolves by local path. Under a restrictive sandbox `uv`
+first — `bond-api` resolves from the recorded copy at `vendor/bond-api`, which
+`scripts/vendor.py --check` verifies. Under a restrictive sandbox `uv`
 cannot write its cache; `Failed to initialize cache` is an environment
 restriction, not a package failure.
 
 | # | Gate | Command | Green means |
 |---|---|---|---|
 | 1 | Tests + branch coverage | `uv run pytest tests/ --cov=src --cov-fail-under=90` | 0 failed, 0 skipped, coverage ≥ the 90 % floor — live figures in [`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md), never quoted here |
-| 2 | Lint | `uv run ruff check src/ scripts/ tests/` | `All checks passed!` |
-| 3 | Format | `uv run ruff format --check src/ scripts/ tests/` | every file already formatted |
+| 2 | Lint | `uv run ruff check src/ scripts/ tests/` | `All checks passed!` — **not reached as of 2026-11-04**: see D2 below |
+| 3 | Format | `uv run ruff format --check src/ scripts/ tests/` | every file already formatted — green only because the table below states `line-length = 120`; at ruff's default 88 it reported 23 files (D1) |
 | 4 | Types | `uv run mypy src/ scripts/` | no issues found |
 | 5 | Manuscript resolves, no unresolved token | `uv run python scripts/z_generate_manuscript_variables.py` | exit 0, writes `output/manuscript/` |
-| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` | every hit is a lineage note (`README.md`, `STANDALONE.md`, `AGENTS.md`, `docs/AGENTS.md`, this file) |
-| 7 | Clean tree after a path-scoped commit | `git status --short` | empty |
+| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` | the three lineage notes and nothing else: `README.md`, `STANDALONE.md`, this file. Adding those three as `--glob '!…'` prints `Clean`, and *that* spelling can fail — the two rule copies are written bracket-split so the audit cannot hit its own prose (D4) |
+| 7 | Recorded copies match their provenance | `uv run python scripts/vendor.py --check` | `vendor/bond-api: ok`, 0 finding(s) |
+| 8 | Clean tree after a path-scoped commit | `git status --short` | empty |
 
 Per-module coverage lives in [`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md)
 (regenerated, never restated here; **V4** was closed in Round-2, which took the

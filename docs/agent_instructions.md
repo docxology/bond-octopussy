@@ -7,7 +7,10 @@ Operational constraints for agents working inside this BOND film package:
 ## Hard rules
 
 1. **Scope.** Modify only this repository. Never touch a sibling BOND package
-   or the template repo. `git add -A` only inside this repo.
+   or the template repo; the one suite dependency this package consumes is the
+   recorded copy at `vendor/bond-api`, which belongs to this repository and is
+   refreshed by `scripts/vendor.py`, never by hand. `git add -A` only inside
+   this repo.
 
 2. **Layer purity.** The six domain modules — `forgery_detection.py`,
    `varnish_ageing.py`, `cover_logistics.py`, `rolling_stock.py`,
@@ -83,7 +86,11 @@ registry receive it.
 - [ ] `uv run pytest tests/ --cov=src --cov-fail-under=90` — 0 failures, 0 skips
 - [ ] `uv run ruff check src/ scripts/ tests/` and `uv run ruff format --check src/ scripts/ tests/`
 - [ ] `uv run mypy src/ scripts/` clean
-- [ ] `rg -n "template[_]code_project"` → zero (outside lineage notes)
+- [ ] `uv run python scripts/vendor.py --check` → `ok` for every recorded copy
+- [ ] `rg -n "template[_]code_project"` → hits only in the lineage notes
+      (`README.md`, `STANDALONE.md`, `TODO.md`); adding those three as
+      `--glob '!…'` makes the command print `Clean`, which is the spelling that
+      can fail
 - [ ] `uv run python scripts/z_generate_manuscript_variables.py` exits 0 with no unresolved token
 - [ ] `git status` clean after a path-scoped commit
 - [ ] report modules touched, measured coverage %, and commit SHA

@@ -1,5 +1,7 @@
 # OCTOPUSSY — FABERGÉ : special-agent mission software (BOND suite film package)
-# Inherits workspace settings from root pyproject.toml
+# Package-local configuration. Nothing is inherited from a workspace root: ruff,
+# mypy and pytest read this file (or their defaults), and the tables at the end
+# are the effective settings.
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -67,8 +69,9 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-# Project-local mypy settings (the monorepo root config has no mypy_path for
-# this package's src/ layout).
+# Project-local mypy settings. mypy reads the nearest config and does not merge
+# a workspace root's, so `mypy src/ scripts/` uses these values (or mypy's
+# defaults) and nothing else.
 # Vendored copies are a dependency; their bytes are bound by scripts/vendor.py.
 exclude = ["(^|/)vendor/"]
 python_version = "3.12"
@@ -84,8 +87,14 @@ warn_unused_ignores = true
 ignore_missing_imports = true
 
 [tool.uv]
-# Inherits workspace settings from root pyproject.toml
 
 [tool.ruff]
+# This table is the effective configuration. Ruff selects the nearest config
+# file and does not merge a workspace one, so a value not stated here is ruff's
+# default, not a parent's — the neighbouring tables in this file are the whole
+# story. line-length = 120 is the width this tree is already written to
+# (measured 2026-11-04: at 120, 41 of 41 files are already formatted; at the
+# default 88, 23 would be reformatted).
+line-length = 120
 # The vendored copies are byte-identical to upstream and must stay that way.
 extend-exclude = ["vendor"]

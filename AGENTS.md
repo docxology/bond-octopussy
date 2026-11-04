@@ -7,7 +7,7 @@ default branch `main`). Scope is exactly this directory.
 ## Build and test
 
 ```bash
-uv sync --extra dev          # required first: bond-api resolves by local path
+uv sync --extra dev          # required first: bond-api resolves from vendor/bond-api
 uv run pytest tests/ --cov=src --cov-fail-under=90
 ```
 
@@ -20,8 +20,9 @@ Every gate, in the order to run them:
 | 3 | Format | `uv run ruff format --check src/ scripts/ tests/` |
 | 4 | Types | `uv run mypy src/ scripts/` |
 | 5 | Manuscript resolves with no unresolved token | `uv run python scripts/z_generate_manuscript_variables.py` |
-| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` |
-| 7 | Clean tree after a path-scoped commit | `git status --short` |
+| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` — every hit must be one of the three lineage notes (`README.md`, `STANDALONE.md`, `TODO.md`); the rule copies keep the pattern bracket-split so the audit cannot hit its own prose. Add those three as `--glob '!…'` and the command prints `Clean` instead: that spelling can fail. |
+| 7 | Recorded copies match their provenance | `uv run python scripts/vendor.py --check` — `vendor/bond-api: ok`, 0 finding(s) |
+| 8 | Clean tree after a path-scoped commit | `git status --short` |
 
 Useful subsets:
 
@@ -49,7 +50,8 @@ sandbox disabled.
 Enforced by the BOND shared guardrails: ≥90% line+branch coverage on `src/`,
 zero mock frameworks, deterministic fixed-seed computation, manuscript metrics
 injected via `manuscript_variables.py` (never hand-authored), and zero
-`template_code_project` strings outside lineage notes.
+`template[_]code_project` strings outside lineage notes (the pattern is written
+bracket-split everywhere it is *stated*, so gate 6's own text is not a hit).
 
 ## Key concepts
 
@@ -79,8 +81,11 @@ injected via `manuscript_variables.py` (never hand-authored), and zero
 
 ## Protocol integration
 
-`bond-api` is a local path dependency (`[tool.uv.sources]`). Run
-`uv sync --extra dev` before `pytest`. The orchestrator discovers this film by
+`bond-api` is a recorded copy inside this repository (`vendor/bond-api`,
+declared in `[tool.uv.sources]`), so a clone resolves its own dependency. Run
+`uv sync --extra dev` before `pytest`; refresh the copy with
+`scripts/vendor.py` and verify it with `scripts/vendor.py --check` — never edit
+`vendor/` by hand. The orchestrator discovers this film by
 importing `octopussy.mission` and instantiating `MissionProvider`;
 `bond_api.load_provider('octopussy')` is the supported entry point.
 
