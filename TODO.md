@@ -303,22 +303,107 @@ disagree, change the manuscript claim first.
 
 ---
 
+## Vendoring wave (2026-11-04)
+
+`bond-api` was resolved from a sibling checkout (`../bond-api`), so a clone of
+this repository resolved nothing: in a sibling-free export `uv sync --extra dev`
+fails with `Failed to generate package metadata for bond-api==0.1.0 @
+directory+../bond-api` / `Distribution not found`, and `uv lock --check` is rc=1
+against the committed lock. The upstream bytes are now recorded at
+`vendor/bond-api` with `PROVENANCE.json` (upstream commit `c0362ff0c9d7`, a
+sha256 per copied file) and `VENDOR.md`; `[tool.uv.sources]` points at the copy,
+`uv.lock` was regenerated from that declaration (two runs byte-identical, two
+moved lines, `--refresh` unchanged, no `../bond-api` left), and
+`scripts/vendor.py --check` verifies it offline — inside the suite too, via
+`tests/test_vendor_provenance.py`.
+
+Measured at the pre-change head `2439837`: lock/sync rc=0, **168 passed**,
+99.36 % (1330 statements / 378 branches, 6 partial branches), `ruff check` **50
+findings**, `ruff format --check` **23 files would be reformatted** at the
+configuration then in effect, six mission CLIs + the token generator rc=0, two
+consecutive regenerations byte-identical (`5fbefbf11c887363`). The vendored
+payload is byte-equal to upstream on all ten copied paths and all 16 patch blobs
+match their recorded post-images.
+
+**D1 — "Inherits workspace settings from root pyproject.toml" was false, and
+the missing width was visible.** No `pyproject.toml` anywhere above this
+package declares a `[tool.ruff]` table, so nothing was inherited: the effective
+configuration was ruff's own default (`--show-settings` reported
+`line_length = 88`, and `--isolated` produced the *same* enabled-rules block, so
+no config file was being read at all). At 88 the tree does not look formatted —
+gate 3 reported 23 files — while at 120 every file was already formatted, which
+is the tree's own evidence of the width it was written to. The `[tool.ruff]`
+table this change creates therefore states `line-length = 120` beside the
+exclusion, and the comments at the head of the file and above `[tool.mypy]` now
+say that nothing is merged. Two-arm control, keeping the table in this file and
+varying only its body: with `line-length = 120`, scoped `ruff format --check` is
+43 files already formatted and the whole tree reports 1 file; with that one line
+removed, the same commands report **24** (scoped) and **25** (whole tree) files
+that would be reformatted.
+
+**D2 — gate 2 (`All checks passed!`) is unreachable today and is not folded
+into this change.** Scoped `ruff check src/ scripts/ tests/` reports **50
+findings** before (at 88) and **45** after (at 120): `RUF100` ×20, `I001` ×10,
+`RUF059` ×4, `RUF022` ×3, `TRY004` ×2, `PLW1510` ×2, `UP017`, `SIM115`,
+`RUF007`, `C408`. Five of the `I001` are width-driven; the rest are real lint
+debt that predates the vendoring and belongs to its own change. The gate tables
+now say so rather than promising `All checks passed!`.
+
+**D3 — the `extend-exclude` line, measured with both arms keeping the table in
+this file.** With it, whole-tree `ruff check .` reports the same 45 findings as
+the scoped command and the whole-tree format reports 1 file. With only that
+line removed, `ruff check .` reports **55** — ten of them in `vendor/`, exactly
+`ruff check vendor/` alone — and `ruff format --check .` reports **2** files:
+the pre-existing `README.md:59:40` and **`vendor/bond-api/README.md:95:1`**.
+Without the line the project's formatter would rewrite a recorded upstream file
+and the provenance digests would fail; the exclusion is what keeps the copy
+strict, and `scripts/vendor.py --check` is what proves it.
+
+**D4 — gate 6's own prose was two of its five hits.** `AGENTS.md` and
+`docs/AGENTS.md` wrote the lineage token unbracketed while describing the rule,
+so the audit's hits included the rule text, and the documented expectation
+("every hit is a lineage note", listing five files) was wrong about two of them.
+Both copies are now written bracket-split, leaving exactly the three lineage
+notes (`README.md`, `STANDALONE.md`, this file); the gate table and checklist
+name the spelling that can print `Clean` — the same command with those three
+paths excluded — because that spelling can fail.
+
+**D5 — the vendored checker had to be conformed to this repository's declared
+width, and the record re-sealed.** `scripts/vendor.py` arrived conformed under
+ruff 0.16.1 at the default 88; at the 120 declared by D1 it needed three
+line-joins (86 changed lines, formatting only — no logic). `--check` then
+reported `scripts/vendor.py: changed since the record; re-seal with --refresh`
+(the record binds the checker's own bytes), and `--refresh` changed exactly one
+field, `vendor/bond-api/PROVENANCE.json`'s `checker_sha256`
+(`e7b56b3e…` → `0372e5d8…`). The payload is untouched: still byte-equal to
+upstream on all ten paths, and `--check` reports 0 finding(s).
+
+**D6 — a pre-existing whole-tree format red.** `ruff format --check .` reports
+`README.md:59:40` — a fenced code block — with the exclusion in place, and it
+was there before the change too (`README.md:58:40` at the same width in the
+pre-change export). The documented gates read `src/ scripts/ tests/` and never
+that file; the row exists so the red is not silently carried.
+
+---
+
 ## Verification
 
 Run in this order from the repository root (`bond-octopussy`). `uv sync --extra dev`
-first — `bond-api` resolves by local path. Under a restrictive sandbox `uv`
+first — `bond-api` resolves from the recorded copy at `vendor/bond-api`, which
+`scripts/vendor.py --check` verifies. Under a restrictive sandbox `uv`
 cannot write its cache; `Failed to initialize cache` is an environment
 restriction, not a package failure.
 
 | # | Gate | Command | Green means |
 |---|---|---|---|
 | 1 | Tests + branch coverage | `uv run pytest tests/ --cov=src --cov-fail-under=90` | 0 failed, 0 skipped, coverage ≥ the 90 % floor — live figures in [`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md), never quoted here |
-| 2 | Lint | `uv run ruff check src/ scripts/ tests/` | `All checks passed!` |
-| 3 | Format | `uv run ruff format --check src/ scripts/ tests/` | every file already formatted |
+| 2 | Lint | `uv run ruff check src/ scripts/ tests/` | `All checks passed!` — **not reached as of 2026-11-04**: see D2 below |
+| 3 | Format | `uv run ruff format --check src/ scripts/ tests/` | every file already formatted — green only because the table below states `line-length = 120`; at ruff's default 88 it reported 23 files (D1) |
 | 4 | Types | `uv run mypy src/ scripts/` | no issues found |
 | 5 | Manuscript resolves, no unresolved token | `uv run python scripts/z_generate_manuscript_variables.py` | exit 0, writes `output/manuscript/` |
-| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` | every hit is a lineage note (`README.md`, `STANDALONE.md`, `AGENTS.md`, `docs/AGENTS.md`, this file) |
-| 7 | Clean tree after a path-scoped commit | `git status --short` | empty |
+| 6 | No exemplar leftovers | `rg -n "template[_]code_project" . --glob '!uv.lock' --glob '!.git/**'` | the three lineage notes and nothing else: `README.md`, `STANDALONE.md`, this file. Adding those three as `--glob '!…'` prints `Clean`, and *that* spelling can fail — the two rule copies are written bracket-split so the audit cannot hit its own prose (D4) |
+| 7 | Recorded copies match their provenance | `uv run python scripts/vendor.py --check` | `vendor/bond-api: ok`, 0 finding(s) |
+| 8 | Clean tree after a path-scoped commit | `git status --short` | empty |
 
 Per-module coverage lives in [`docs/_generated/COUNTS.md`](docs/_generated/COUNTS.md)
 (regenerated, never restated here; **V4** was closed in Round-2, which took the

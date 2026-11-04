@@ -3,7 +3,8 @@
 This package is a BOND-suite film package (film *Octopussy*, 1983; mission
 codename **FABERGÉ**). It lives in this repository (`bond-octopussy`, upstream
 <https://github.com/docxology/bond-octopussy>, default branch `main`) and needs
-no other BOND package to run except the sibling `bond-api` protocol it consumes.
+no other checkout at all: the `bond-api` protocol it consumes is recorded
+inside it, at `vendor/bond-api`, verified by `scripts/vendor.py --check`.
 
 The package was scaffolded from `template_code_project` (see the exemplar
 lineage) and converted to its FABERGÉ identity in the BOND phase-2 build, then

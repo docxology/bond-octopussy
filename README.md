@@ -3,7 +3,8 @@
 A BOND-suite film package (film *Octopussy*, 1983; mission codename
 **FABERGÉ**). It implements the film's investigative problems as six pure,
 deterministic algorithm modules and exposes them behind the frozen
-sibling `bond-api` `MissionProvider` contract.
+`bond-api` `MissionProvider` contract, whose bytes are recorded in
+`vendor/bond-api` inside this repository.
 
 **Upstream:** <https://github.com/docxology/bond-octopussy> (default branch
 `main`).
@@ -90,7 +91,7 @@ output/                 disposable, regenerated (outcome JSON, figures, resolved
 From this directory:
 
 ```bash
-uv sync --extra dev                                       # resolves bond-api by local path
+uv sync --extra dev                                       # resolves bond-api from vendor/bond-api
 uv run pytest tests/ --cov=src --cov-fail-under=90
 uv run python scripts/demo_mission.py                     # full five-stage lifecycle
 uv run python scripts/mission_execute.py                  # -> output/data + output/figures
@@ -108,6 +109,7 @@ package failure.
 | Tests + branch coverage ≥90% on `src/` | `uv run pytest tests/ --cov=src --cov-fail-under=90` |
 | Lint + format | `uv run ruff check src/ scripts/ tests/` · `uv run ruff format --check src/ scripts/ tests/` |
 | Types | `uv run mypy src/ scripts/` |
+| Recorded copies | `uv run python scripts/vendor.py --check` → `ok` per package |
 | No exemplar leftovers | `rg -n "template[_]code_project"` → zero outside lineage notes |
 
 No mocks anywhere; every pipeline is deterministic under a fixed seed. The

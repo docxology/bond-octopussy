@@ -37,7 +37,8 @@ rules live in [`../AGENTS.md`](../AGENTS.md).
 3. **`_generated/` is output.** Regenerate it from a real run; never edit a
    number in it by hand, and never quote one of its numbers into another file.
 4. **No exemplar boilerplate.** This package was forked from the template
-   exemplar `template_code_project`; that lineage may be mentioned, but no
+   exemplar `template[_]code_project` (written bracket-split here so this rule
+   is not itself one of gate 6's hits); that lineage may be mentioned, but no
    text describing the exemplar's own domain may survive here.
 5. **Cross-references must resolve.** Relative links are checked by eye at
    review time — if you move a file, fix the links pointing at it.
