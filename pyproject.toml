@@ -33,7 +33,7 @@ dev = [
 [tool.uv.sources]
 # FROZEN protocol dependency: bond-api is Layer 1 of the BOND suite and must be
 # resolvable from this film package. `uv sync --extra dev` before pytest.
-bond-api = { path = "../bond-api" }
+bond-api = { path = "vendor/bond-api" }
 
 [tool.pytest.ini_options]
 # RASP Strict Assertion: Tests must be clearly separated and structurally identifiable
@@ -69,6 +69,8 @@ exclude_lines = [
 [tool.mypy]
 # Project-local mypy settings (the monorepo root config has no mypy_path for
 # this package's src/ layout).
+# Vendored copies are a dependency; their bytes are bound by scripts/vendor.py.
+exclude = ["(^|/)vendor/"]
 python_version = "3.12"
 mypy_path = ["src"]
 explicit_package_bases = true
@@ -83,3 +85,7 @@ ignore_missing_imports = true
 
 [tool.uv]
 # Inherits workspace settings from root pyproject.toml
+
+[tool.ruff]
+# The vendored copies are byte-identical to upstream and must stay that way.
+extend-exclude = ["vendor"]
