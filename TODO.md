@@ -519,3 +519,7 @@ never triggers across the probe geometries tried).
 - **E1–E4 (extensions)** unchanged: per-resin τ, a second non-saturating age
   observable, sweep attenuation/energy channels, and delegating provenance to
   `bond-utilities` (the `datetime.now` caveat in E4 still applies).
+
+## Workflowz review — 2026-11-10
+
+No new concrete improvement survived this bounded review. Coverage: root guidance and README, the existing open-work TODO, Python/dependency/tool configuration, package initialization, the shared band-grid module, all four supplied figure generators, and the supplied rolling-stock and source-locator excerpts. The visible `...` markers in `source_locator.py` are intentional typing-protocol bodies, not production stubs; no silent mock/fallback/fake substitute was established. Python is currently selected as `3.15` in `.python-version:1`, while `pyproject.toml:18` declares `>=3.11` and `pyproject.toml:77` configures mypy for `3.12`; the packet provides no failing runtime/dependency evidence that would justify a version-change task. Existing TODO items V1–V3 and E1–E4 were not duplicated. Re-review on a concrete test/runtime failure or a relevant source, dependency, or deployment-pin change.
