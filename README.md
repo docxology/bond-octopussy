@@ -6,6 +6,30 @@ deterministic algorithm modules and exposes them behind the frozen
 `bond-api` `MissionProvider` contract, whose bytes are recorded in
 `vendor/bond-api` inside this repository.
 
+## Mission model
+
+```mermaid
+flowchart TD
+    accTitle: FABERGÉ implemented mission analyses
+    accDescr: Artifact spectra, rail trips, containers and detector lattice feed Pigment fingerprint and varnish-age estimation; Rail transfer routing and trainset circulation; Concealment anomalies and radiation-source fit. The mission adapter returns forgery verdicts, transport plans and source estimates with provenance, then a debrief.
+    I["Artifact spectra, rail trips, containers and detector lattice"]
+    G0["Pigment fingerprint and varnish-age estimation"]
+    I --> G0
+    G1["Rail transfer routing and trainset circulation"]
+    I --> G1
+    G2["Concealment anomalies and radiation-source fit"]
+    I --> G2
+    O["mission.py: execute returns MissionOutcome<br/>Forgery verdicts, transport plans and source estimates and provenance"]
+    G0 --> O
+    G1 --> O
+    G2 --> O
+    O --> F["debrief: mission summary"]
+```
+
+The branches group implemented capabilities; they do not imply a runtime order.
+
+**Source map:** [`forgery_detection.py`](src/octopussy/forgery_detection.py), [`varnish_ageing.py`](src/octopussy/varnish_ageing.py); [`cover_logistics.py`](src/octopussy/cover_logistics.py), [`rolling_stock.py`](src/octopussy/rolling_stock.py); [`concealment_sweep.py`](src/octopussy/concealment_sweep.py), [`source_locator.py`](src/octopussy/source_locator.py); [`mission.py`](src/octopussy/mission.py).
+
 **Upstream:** <https://github.com/docxology/bond-octopussy> (default branch
 `main`).
 
