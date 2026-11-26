@@ -1,4 +1,6 @@
 ---
+
+[Package maintenance](package-maintenance.md) identifies the dependency and citation records.
 title: "docs: octopussy — FABERGÉ"
 type: "documentation_guide"
 version: "0.1.0"

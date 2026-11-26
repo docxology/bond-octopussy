@@ -1,5 +1,7 @@
 # Docs — Octopussy: FABERGÉ
 
+[Package maintenance](package-maintenance.md) covers dependency and release records.
+
 Agent-facing documentation for the FABERGÉ film package (BOND suite, film
 *Octopussy*, 1983). This directory explains how the package is built, how to
 work inside it, and what its quality gates actually mean. It is prose about
