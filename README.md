@@ -1,5 +1,7 @@
 # Octopussy: FABERGÉ — Special-Agent Mission Software
 
+See [package maintenance](docs/package-maintenance.md) for dependency and citation records.
+
 A BOND-suite film package (film *Octopussy*, 1983; mission codename
 **FABERGÉ**). It implements the film's investigative problems as six pure,
 deterministic algorithm modules and exposes them behind the frozen
