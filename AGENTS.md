@@ -1,5 +1,8 @@
 # AGENTS.md — Octopussy: FABERGÉ
 
+The [package maintenance guide](docs/package-maintenance.md) records the
+distribution identity, Python selection, dependency provenance, and citation metadata.
+
 This is a BOND-suite film package in this repository
 (`bond-octopussy`, upstream <https://github.com/docxology/bond-octopussy>,
 default branch `main`). Scope is exactly this directory.
